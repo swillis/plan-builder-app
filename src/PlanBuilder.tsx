@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, Clock, Target, TrendingUp, ChevronDown, Search } from 'lucide-react';
+import { Plus, X, Target, TrendingUp, ChevronDown, Search } from 'lucide-react';
+import { scoreTrainingPlan } from './planScoring';
 
 interface Exercise {
   name: string;
@@ -222,6 +223,15 @@ const PillBar = ({ count, max = 20 }: { count: number; max?: number }) => {
   );
 };
 
+// --- SCORING FUNCTION ---
+/**
+ * Evaluates a training plan and returns a score and letter grade.
+ * @param plan - The training plan JSON (array of days with exercises)
+ * @param experience - User's experience level ("Beginner", "Intermediate", "Advanced")
+ * @param focusAreas - Array of focus area muscle groups
+ * @returns { score: number, grade: string, details: string[] }
+ */
+
 const TrainingPlanBuilder = () => {
   const [experience, setExperience] = useState('Intermediate');
   const [focusAreas, setFocusAreas] = useState(['Back', 'Glutes']);
@@ -350,7 +360,7 @@ const TrainingPlanBuilder = () => {
           trainedMuscles.add(exercise.primaryMuscle);
         }
         if (exercise.secondaryMuscle) {
-          volumeMap[exercise.secondaryMuscle] += Math.floor((exercise.sets || 0) * 0.5);
+          volumeMap[exercise.secondaryMuscle] += Math.floor((exercise.sets || 0));
           trainedMuscles.add(exercise.secondaryMuscle);
         }
       });
@@ -428,6 +438,35 @@ const TrainingPlanBuilder = () => {
     return { text: `Optimal set range for your experience level (${min}-${max} sets)`, color: 'text-green-600 bg-green-50' };
   };
   const weeklySetRecommendation = getWeeklySetRecommendation(totalSets, experience);
+
+  // Helper: Map muscle group to exercises and days
+  const getMuscleExerciseMap = () => {
+    const map: Record<string, { name: string; day: string }[]> = {};
+    muscleGroups.forEach(muscle => { map[muscle] = []; });
+    days.forEach(day => {
+      day.exercises.forEach(ex => {
+        if (
+          ex.primaryMuscle &&
+          muscleGroups.map(m => m.toLowerCase()).includes(ex.primaryMuscle.toLowerCase())
+        ) {
+          // Find the canonical muscle group name
+          const canonical = muscleGroups.find(m => m.toLowerCase() === ex.primaryMuscle.toLowerCase())!;
+          map[canonical].push({ name: ex.name, day: day.name });
+        }
+        if (
+          ex.secondaryMuscle &&
+          muscleGroups.map(m => m.toLowerCase()).includes(ex.secondaryMuscle.toLowerCase())
+        ) {
+          const canonical = muscleGroups.find(m => m.toLowerCase() === ex.secondaryMuscle.toLowerCase())!;
+          map[canonical].push({ name: ex.name, day: day.name });
+        }
+      });
+    });
+    return map;
+  };
+  const muscleExerciseMap = getMuscleExerciseMap();
+
+  const score = scoreTrainingPlan(days, experience, focusAreas);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -524,7 +563,6 @@ const TrainingPlanBuilder = () => {
                             <strong>Sets:</strong> {day.exercises.reduce((total, ex) => total + (ex.sets || 0), 0)}
                         </span>
                         <span className="text-gray-600 flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
                             <strong>Time:</strong> {day.exercises.reduce((total, ex) => total + (ex.sets || 0), 0) * 3} min
                         </span>
                         </div>
@@ -613,6 +651,7 @@ const TrainingPlanBuilder = () => {
                   const volume = volumeMap[muscle] || 0;
                   const frequency = frequencyMap[muscle] || 0;
                   const recommendation = getVolumeRecommendation(volume);
+                  const exercises = muscleExerciseMap[muscle];
                   
                   if (volume === 0 && frequency === 0) return null;
                   
@@ -628,6 +667,12 @@ const TrainingPlanBuilder = () => {
                       </div>
                       {/* PillBar visualization for sets */}
                       <PillBar count={Math.min(volume, 20)} max={20} />
+                      {/* List exercises and days for this muscle group */}
+                      {exercises && exercises.length > 0 && (
+                        <div className="text-xs text-gray-500 mb-2">
+                          {exercises.map((ex) => `${ex.name} (${ex.day})`).join(', ')}
+                        </div>
+                      )}
                       <div className={`text-xs px-4 py-3 rounded-md ${recommendation.color}`}>
                         {recommendation.text}
                       </div>
@@ -657,6 +702,29 @@ const TrainingPlanBuilder = () => {
                 </div>
               </div>
             )}
+
+            {/* Training Plan Score */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-3">Training Plan Score</h3>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center flex flex-col grow">
+                  <div className="text-2xl font-bold text-purple-600">{score.score}%</div>
+                  <div className="text-sm text-gray-600">Score</div>
+                </div>
+                <div className="text-center flex flex-col grow">
+                  <div className="text-2xl font-bold text-gray-900">{score.grade}</div>
+                  <div className="text-sm text-gray-600">Grade</div>
+                </div>
+              </div>
+              <div className="mt-4 text-sm text-gray-700">
+                <strong>Details:</strong>
+                <ul className="list-disc list-inside mt-2">
+                  {score.details.map((detail, index) => (
+                    <li key={index}>{detail}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
