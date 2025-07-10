@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, X, Target, TrendingUp, ChevronDown, Search } from 'lucide-react';
 import { scoreTrainingPlan } from './planScoring';
-
-interface Exercise {
-  name: string;
-  primaryMuscle: string;
-  secondaryMuscle: string;
-  category: string;
-  sets?: number;
-}
+import { exerciseDatabase } from './exerciseDatabase';
+import type { Exercise } from './exerciseDatabase';
 
 interface Day {
   name: string;
@@ -30,104 +24,13 @@ const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
-  const exerciseDatabase = [
-    // Chest
-    { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest' },
-    { name: 'Dumbbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest' },
-    { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest' },
-    { name: 'Decline Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest' },
-    { name: 'Machine Chest Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest' },
-    { name: 'Push-Up', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest' },
-    { name: 'Wide Push-Up', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest' },
-    { name: 'Pec Deck / Chest Fly', primaryMuscle: 'Chest', secondaryMuscle: '', category: 'Chest' },
-    { name: 'Cable Chest Fly', primaryMuscle: 'Chest', secondaryMuscle: '', category: 'Chest' },
-    
-    // Back
-    { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back' },
-    { name: 'Chin-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back' },
-    { name: 'Lat Pulldown', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back' },
-    { name: 'Barbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back' },
-    { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back' },
-    { name: 'Seated Cable Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back' },
-    { name: 'T-Bar Row', primaryMuscle: 'Back', secondaryMuscle: 'Shoulders', category: 'Back' },
-    { name: 'Machine Row', primaryMuscle: 'Back', secondaryMuscle: '', category: 'Back' },
-    { name: 'Face Pull', primaryMuscle: 'Shoulders', secondaryMuscle: 'Back', category: 'Back' },
-    
-    // Shoulders
-    { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders' },
-    { name: 'Dumbbell Shoulder Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders' },
-    { name: 'Arnold Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders' },
-    { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders' },
-    { name: 'Front Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders' },
-    { name: 'Rear Delt Fly', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders' },
-    { name: 'Upright Row', primaryMuscle: 'Shoulders', secondaryMuscle: 'Back', category: 'Shoulders' },
-    { name: 'Cable Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders' },
-    
-    // Biceps
-    { name: 'Barbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    { name: 'Dumbbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    { name: 'Hammer Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    { name: 'Preacher Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    { name: 'Cable Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    { name: 'Concentration Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    { name: 'Incline Dumbbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps' },
-    
-    // Triceps
-    { name: 'Tricep Pushdown', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps' },
-    { name: 'Overhead Tricep Extension', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps' },
-    { name: 'Skullcrusher', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps' },
-    { name: 'Dips', primaryMuscle: 'Triceps', secondaryMuscle: 'Chest', category: 'Triceps' },
-    { name: 'Close-Grip Bench Press', primaryMuscle: 'Triceps', secondaryMuscle: 'Chest', category: 'Triceps' },
-    { name: 'Dumbbell Kickback', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps' },
-    { name: 'Cable Overhead Extension', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps' },
-    
-    // Quads
-    { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads' },
-    { name: 'Front Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Abs', category: 'Quads' },
-    { name: 'Bulgarian Split Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads' },
-    { name: 'Walking Lunge', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads' },
-    { name: 'Step-Up', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads' },
-    { name: 'Leg Press', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads' },
-    { name: 'Leg Extension', primaryMuscle: 'Quads', secondaryMuscle: '', category: 'Quads' },
-    
-    // Hamstrings
-    { name: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings' },
-    { name: 'Stiff-Leg Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings' },
-    { name: 'Seated Leg Curl', primaryMuscle: 'Hamstrings', secondaryMuscle: '', category: 'Hamstrings' },
-    { name: 'Lying Leg Curl', primaryMuscle: 'Hamstrings', secondaryMuscle: '', category: 'Hamstrings' },
-    { name: 'Nordic Curl', primaryMuscle: 'Hamstrings', secondaryMuscle: '', category: 'Hamstrings' },
-    { name: 'Glute-Ham Raise', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings' },
-    
-    // Glutes
-    { name: 'Hip Thrust', primaryMuscle: 'Glutes', secondaryMuscle: 'Hamstrings', category: 'Glutes' },
-    { name: 'Barbell Glute Bridge', primaryMuscle: 'Glutes', secondaryMuscle: 'Hamstrings', category: 'Glutes' },
-    { name: 'Cable Kickback', primaryMuscle: 'Glutes', secondaryMuscle: '', category: 'Glutes' },
-    { name: 'Frog Pump', primaryMuscle: 'Glutes', secondaryMuscle: '', category: 'Glutes' },
-    { name: 'Banded Glute Bridge', primaryMuscle: 'Glutes', secondaryMuscle: '', category: 'Glutes' },
-    
-    // Calves
-    { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves' },
-    { name: 'Seated Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves' },
-    { name: 'Donkey Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves' },
-    { name: 'Leg Press Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves' },
-    
-    // Abs/Core
-    { name: 'Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' },
-    { name: 'Hanging Leg Raise', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' },
-    { name: 'Cable Crunch', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' },
-    { name: 'Sit-Up', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' },
-    { name: 'Russian Twist', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' },
-    { name: 'Side Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' },
-    { name: 'Ab Wheel Rollout', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs' }
-  ];
-
   const filteredExercises = exerciseDatabase.filter((exercise: Exercise) =>
     exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     exercise.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     exercise.primaryMuscle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const groupedExercises = filteredExercises.reduce((groups: Record<string, Exercise[]>, exercise) => {
+  const groupedExercises = filteredExercises.reduce((groups: Record<string, Exercise[]>, exercise: Exercise) => {
     const category = exercise.category;
     if (!groups[category]) {
       groups[category] = [];
@@ -142,7 +45,7 @@ const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
     setSearchTerm('');
   };
 
-  const currentExercise = exerciseDatabase.find(ex => ex.name === value);
+  const currentExercise = exerciseDatabase.find((ex: Exercise) => ex.name === value);
 
   return (
     <div className="relative">
@@ -178,7 +81,7 @@ const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
                 <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
                   <h4 className="text-sm font-medium text-gray-700">{category}</h4>
                 </div>
-                {exercises.map(exercise => (
+                {(exercises as Exercise[]).map((exercise: Exercise) => (
                   <div
                     key={exercise.name}
                     className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
@@ -249,6 +152,135 @@ const TrainingPlanBuilder = () => {
 
   const experienceLevels = ['Beginner', 'Intermediate', 'Advanced'];
 
+  // Sample plans
+  const samplePlans: Record<string, Day[]> = {
+    '3-Day Sample Plan': [
+      {
+        name: 'Day 1',
+        exercises: [
+          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
+          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 },
+          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
+          { name: 'Lat Pulldown', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 },
+          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 3 },
+          { name: 'Barbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 2',
+        exercises: [
+          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
+          { name: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings', sets: 4 },
+          { name: 'Bulgarian Split Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 },
+          { name: 'Hip Thrust', primaryMuscle: 'Glutes', secondaryMuscle: 'Hamstrings', category: 'Glutes', sets: 3 },
+          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 4 },
+          { name: 'Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 3',
+        exercises: [
+          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
+          { name: 'Dumbbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 3 },
+          { name: 'Dumbbell Shoulder Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 3 },
+          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 },
+          { name: 'Tricep Pushdown', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps', sets: 3 },
+          { name: 'Hammer Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 },
+          { name: 'Russian Twist', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
+        ]
+      }
+    ],
+    '4-Day Sample Plan': [
+      {
+        name: 'Day 1',
+        exercises: [
+          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
+          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 },
+          { name: 'Barbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 2',
+        exercises: [
+          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
+          { name: 'Leg Press', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 },
+          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 4 }
+        ]
+      },
+      {
+        name: 'Day 3',
+        exercises: [
+          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
+          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 },
+          { name: 'Lat Pulldown', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 4',
+        exercises: [
+          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 4 },
+          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 },
+          { name: 'Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
+        ]
+      }
+    ],
+    '5-Day Sample Plan': [
+      {
+        name: 'Day 1',
+        exercises: [
+          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
+          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 2',
+        exercises: [
+          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
+          { name: 'Leg Press', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 3',
+        exercises: [
+          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
+          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 4',
+        exercises: [
+          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 4 },
+          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 }
+        ]
+      },
+      {
+        name: 'Day 5',
+        exercises: [
+          { name: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings', sets: 4 },
+          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 3 }
+        ]
+      }
+    ]
+  };
+
+  const handleSamplePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
+    if (samplePlans[selected]) {
+      setTrainingDays(samplePlans[selected].length);
+      setDays(samplePlans[selected]);
+      // Optionally set experience/focus areas for each plan
+      if (selected === '3-Day Sample Plan') {
+        setExperience('Intermediate');
+        setFocusAreas(['Back', 'Chest', 'Shoulders']);
+      } else if (selected === '4-Day Sample Plan') {
+        setExperience('Intermediate');
+        setFocusAreas(['Quads', 'Back', 'Shoulders']);
+      } else if (selected === '5-Day Sample Plan') {
+        setExperience('Advanced');
+        setFocusAreas(['Chest', 'Back', 'Quads', 'Shoulders']);
+      }
+    }
+  };
 
   // Update days array when training days changes
   useEffect(() => {
@@ -295,50 +327,6 @@ const TrainingPlanBuilder = () => {
         ? prev.filter(m => m !== muscle)
         : [...prev, muscle]
     );
-  };
-
-  const loadDummyPlan = () => {
-    const dummyPlan: Day[] = [
-      {
-        name: 'Day 1',
-        exercises: [
-          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
-          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 },
-          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
-          { name: 'Lat Pulldown', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 },
-          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 3 },
-          { name: 'Barbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 2',
-        exercises: [
-          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
-          { name: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings', sets: 4 },
-          { name: 'Bulgarian Split Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 },
-          { name: 'Hip Thrust', primaryMuscle: 'Glutes', secondaryMuscle: 'Hamstrings', category: 'Glutes', sets: 3 },
-          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 4 },
-          { name: 'Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 3',
-        exercises: [
-          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
-          { name: 'Dumbbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 3 },
-          { name: 'Dumbbell Shoulder Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 3 },
-          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 },
-          { name: 'Tricep Pushdown', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps', sets: 3 },
-          { name: 'Hammer Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 },
-          { name: 'Russian Twist', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
-        ]
-      }
-    ];
-    
-    setTrainingDays(3);
-    setExperience('Intermediate');
-    setFocusAreas(['Back', 'Chest', 'Shoulders']);
-    setDays(dummyPlan);
   };
 
   // Analysis calculations
@@ -537,12 +525,24 @@ const TrainingPlanBuilder = () => {
                 </div>
               </div>
               
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={loadDummyPlan}
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors font-medium"
+              <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+                <select
+                  defaultValue=""
+                  onChange={handleSamplePlanChange}
+                  className="w-1/2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors font-medium"
                 >
-                  Load Sample Plan (for testing)
+                  <option value="" disabled>Load Example Plan</option>
+                  <option value="3-Day Sample Plan">3-Day Sample Plan</option>
+                  <option value="4-Day Sample Plan">4-Day Sample Plan</option>
+                  <option value="5-Day Sample Plan">5-Day Sample Plan</option>
+                </select>
+                <button
+                  onClick={() => {
+                    setDays(days.map(day => ({ ...day, exercises: [] })));
+                  }}
+                  className="w-1/2 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors font-medium"
+                >
+                  Reset Plan
                 </button>
               </div>
             </div>
@@ -620,9 +620,32 @@ const TrainingPlanBuilder = () => {
               <TrendingUp className="mr-2 h-5 w-5" />
               Real-Time Analysis
             </h2>
+
+            {/* Training Plan Score */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-3">Training Plan Score</h3>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center flex flex-col grow">
+                  <div className="text-2xl font-bold text-purple-600">{score.score}%</div>
+                  <div className="text-sm text-gray-600">Score</div>
+                </div>
+                <div className="text-center flex flex-col grow">
+                  <div className="text-2xl font-bold text-gray-900">{score.grade}</div>
+                  <div className="text-sm text-gray-600">Grade</div>
+                </div>
+              </div>
+              <div className="mt-4 text-sm text-gray-700">
+                <strong>Details:</strong>
+                <ul className="list-disc list-inside mt-2">
+                  {score.details.map((detail, index) => (
+                    <li key={index}>{detail}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
             
             {/* Weekly Summary */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            {/* <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-semibold text-gray-900 mb-3">Weekly Summary</h3>
               <div className="flex row gap-4">
                 <div className="text-center flex flex-col grow">
@@ -641,7 +664,7 @@ const TrainingPlanBuilder = () => {
               <div className={`mt-4 text-center text-sm px-4 py-3 rounded-md font-medium ${weeklySetRecommendation.color}`}>
                 {weeklySetRecommendation.text}
               </div>
-            </div>
+            </div> */}
 
             {/* Volume & Frequency Analysis */}
             <div className="mb-6">
@@ -702,29 +725,6 @@ const TrainingPlanBuilder = () => {
                 </div>
               </div>
             )}
-
-            {/* Training Plan Score */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-3">Training Plan Score</h3>
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-purple-600">{score.score}%</div>
-                  <div className="text-sm text-gray-600">Score</div>
-                </div>
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-gray-900">{score.grade}</div>
-                  <div className="text-sm text-gray-600">Grade</div>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-gray-700">
-                <strong>Details:</strong>
-                <ul className="list-disc list-inside mt-2">
-                  {score.details.map((detail, index) => (
-                    <li key={index}>{detail}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       </div>
