@@ -152,41 +152,41 @@ const TrainingPlanBuilder = () => {
 
   const experienceLevels = ['Beginner', 'Intermediate', 'Advanced'];
 
-  // Sample plans
-  const samplePlans: Record<string, Day[]> = {
+  // Sample plans (now only use name and sets)
+  const samplePlans: Record<string, { name: string; exercises: { name: string; sets: number }[] }[]> = {
     '3-Day Sample Plan': [
       {
         name: 'Day 1',
         exercises: [
-          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
-          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 },
-          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
-          { name: 'Lat Pulldown', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 },
-          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 3 },
-          { name: 'Barbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 }
+          { name: 'Barbell Bench Press', sets: 4 },
+          { name: 'Incline Dumbbell Press', sets: 3 },
+          { name: 'Dumbbell Row', sets: 4 },
+          { name: 'Lat Pulldown', sets: 3 },
+          { name: 'Overhead Barbell Press', sets: 3 },
+          { name: 'Barbell Curl', sets: 3 }
         ]
       },
       {
         name: 'Day 2',
         exercises: [
-          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
-          { name: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings', sets: 4 },
-          { name: 'Bulgarian Split Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 },
-          { name: 'Hip Thrust', primaryMuscle: 'Glutes', secondaryMuscle: 'Hamstrings', category: 'Glutes', sets: 3 },
-          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 4 },
-          { name: 'Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
+          { name: 'Back Squat', sets: 4 },
+          { name: 'Romanian Deadlift', sets: 4 },
+          { name: 'Bulgarian Split Squat', sets: 3 },
+          { name: 'Hip Thrust', sets: 3 },
+          { name: 'Standing Calf Raise', sets: 4 },
+          { name: 'Plank', sets: 3 }
         ]
       },
       {
         name: 'Day 3',
         exercises: [
-          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
-          { name: 'Dumbbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 3 },
-          { name: 'Dumbbell Shoulder Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 3 },
-          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 },
-          { name: 'Tricep Pushdown', primaryMuscle: 'Triceps', secondaryMuscle: '', category: 'Triceps', sets: 3 },
-          { name: 'Hammer Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 },
-          { name: 'Russian Twist', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
+          { name: 'Pull-Up', sets: 4 },
+          { name: 'Dumbbell Bench Press', sets: 3 },
+          { name: 'Dumbbell Shoulder Press', sets: 3 },
+          { name: 'Lateral Raise', sets: 3 },
+          { name: 'Tricep Pushdown', sets: 3 },
+          { name: 'Hammer Curl', sets: 3 },
+          { name: 'Russian Twist', sets: 3 }
         ]
       }
     ],
@@ -194,33 +194,33 @@ const TrainingPlanBuilder = () => {
       {
         name: 'Day 1',
         exercises: [
-          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
-          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 },
-          { name: 'Barbell Curl', primaryMuscle: 'Biceps', secondaryMuscle: '', category: 'Biceps', sets: 3 }
+          { name: 'Barbell Bench Press', sets: 4 },
+          { name: 'Incline Dumbbell Press', sets: 3 },
+          { name: 'Barbell Curl', sets: 3 }
         ]
       },
       {
         name: 'Day 2',
         exercises: [
-          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
-          { name: 'Leg Press', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 },
-          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 4 }
+          { name: 'Back Squat', sets: 4 },
+          { name: 'Leg Press', sets: 3 },
+          { name: 'Standing Calf Raise', sets: 4 }
         ]
       },
       {
         name: 'Day 3',
         exercises: [
-          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
-          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 },
-          { name: 'Lat Pulldown', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 }
+          { name: 'Pull-Up', sets: 4 },
+          { name: 'Dumbbell Row', sets: 3 },
+          { name: 'Lat Pulldown', sets: 3 }
         ]
       },
       {
         name: 'Day 4',
         exercises: [
-          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 4 },
-          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 },
-          { name: 'Plank', primaryMuscle: 'Abs', secondaryMuscle: '', category: 'Abs', sets: 3 }
+          { name: 'Overhead Barbell Press', sets: 4 },
+          { name: 'Lateral Raise', sets: 3 },
+          { name: 'Plank', sets: 3 }
         ]
       }
     ],
@@ -228,46 +228,59 @@ const TrainingPlanBuilder = () => {
       {
         name: 'Day 1',
         exercises: [
-          { name: 'Barbell Bench Press', primaryMuscle: 'Chest', secondaryMuscle: 'Triceps', category: 'Chest', sets: 4 },
-          { name: 'Incline Dumbbell Press', primaryMuscle: 'Chest', secondaryMuscle: 'Shoulders', category: 'Chest', sets: 3 }
+          { name: 'Barbell Bench Press', sets: 4 },
+          { name: 'Incline Dumbbell Press', sets: 3 }
         ]
       },
       {
         name: 'Day 2',
         exercises: [
-          { name: 'Back Squat', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 4 },
-          { name: 'Leg Press', primaryMuscle: 'Quads', secondaryMuscle: 'Glutes', category: 'Quads', sets: 3 }
+          { name: 'Back Squat', sets: 4 },
+          { name: 'Leg Press', sets: 3 }
         ]
       },
       {
         name: 'Day 3',
         exercises: [
-          { name: 'Pull-Up', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 4 },
-          { name: 'Dumbbell Row', primaryMuscle: 'Back', secondaryMuscle: 'Biceps', category: 'Back', sets: 3 }
+          { name: 'Pull-Up', sets: 4 },
+          { name: 'Dumbbell Row', sets: 3 }
         ]
       },
       {
         name: 'Day 4',
         exercises: [
-          { name: 'Overhead Barbell Press', primaryMuscle: 'Shoulders', secondaryMuscle: 'Triceps', category: 'Shoulders', sets: 4 },
-          { name: 'Lateral Raise', primaryMuscle: 'Shoulders', secondaryMuscle: '', category: 'Shoulders', sets: 3 }
+          { name: 'Overhead Barbell Press', sets: 4 },
+          { name: 'Lateral Raise', sets: 3 }
         ]
       },
       {
         name: 'Day 5',
         exercises: [
-          { name: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', secondaryMuscle: 'Glutes', category: 'Hamstrings', sets: 4 },
-          { name: 'Standing Calf Raise', primaryMuscle: 'Calves', secondaryMuscle: '', category: 'Calves', sets: 3 }
+          { name: 'Romanian Deadlift', sets: 4 },
+          { name: 'Standing Calf Raise', sets: 3 }
         ]
       }
     ]
   };
 
+  // Helper to hydrate exercises from the database
+  function getExerciseWithSets(name: string, sets: number): Exercise | null {
+    const base = exerciseDatabase.find(ex => ex.name === name);
+    return base ? { ...base, sets } : null;
+  }
+
   const handleSamplePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value;
     if (samplePlans[selected]) {
       setTrainingDays(samplePlans[selected].length);
-      setDays(samplePlans[selected]);
+      // Hydrate each exercise from the database
+      const hydrated = samplePlans[selected].map(day => ({
+        name: day.name,
+        exercises: day.exercises
+          .map(ex => getExerciseWithSets(ex.name, ex.sets))
+          .filter((ex): ex is Exercise => Boolean(ex))
+      }));
+      setDays(hydrated);
       // Optionally set experience/focus areas for each plan
       if (selected === '3-Day Sample Plan') {
         setExperience('Intermediate');
@@ -298,7 +311,10 @@ const TrainingPlanBuilder = () => {
       sets: 3,
       primaryMuscle: 'Chest',
       secondaryMuscle: 'Triceps',
-      category: 'Chest'
+      category: 'Chest',
+      equipment: 'Barbell',
+      movementType: 'Compound',
+      mechanics: 'Push'
     });
     setDays(newDays);
   };
@@ -363,14 +379,7 @@ const TrainingPlanBuilder = () => {
 
   const { volumeMap, frequencyMap } = getVolumeAndFrequency();
 
-  const getTotalSets = () => {
-    return days.reduce((total, day) => 
-      total + day.exercises.reduce((dayTotal, exercise) => 
-        dayTotal + (exercise.sets || 0), 0), 0);
-  };
-  const getTotalExercises = () => {
-    return days.reduce((total, day) => total + day.exercises.length, 0);
-  };
+  // Removed unused getTotalSets and getTotalExercises
 
   const getVolumeRecommendation = (sets: number) => {
     if (sets < 5) return { text: 'Low for hypertrophy — may support maintenance', color: 'text-blue-600 bg-blue-50' };
@@ -409,23 +418,10 @@ const TrainingPlanBuilder = () => {
     return feedback;
   };
 
-  const totalSets = getTotalSets();
-  const totalTime = totalSets * 3;
-  const totalExercises = getTotalExercises();
+  // Removed unused totalSets
   const feedback = getFocusAreaFeedback();
 
-  // Weekly set recommendation based on experience
-  const getWeeklySetRecommendation = (sets: number, experience: string) => {
-    let min = 0, max = 0;
-    if (experience === 'Beginner') { min = 50; max = 70; }
-    else if (experience === 'Intermediate') { min = 70; max = 110; }
-    else if (experience === 'Advanced') { min = 100; max = 140; }
-
-    if (sets < min) return { text: `Low number of sets for your experience level (${min}-${max} sets recommended)`, color: 'text-blue-600 bg-blue-50' };
-    if (sets > max) return { text: `High number of sets — ensure recovery is managed (${min}-${max} sets recommended)`, color: 'text-red-600 bg-red-50' };
-    return { text: `Optimal set range for your experience level (${min}-${max} sets)`, color: 'text-green-600 bg-green-50' };
-  };
-  const weeklySetRecommendation = getWeeklySetRecommendation(totalSets, experience);
+  // Removed unused getWeeklySetRecommendation
 
   // Helper: Map muscle group to exercises and days
   const getMuscleExerciseMap = () => {
