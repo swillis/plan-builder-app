@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, Target, TrendingUp, ChevronDown, Search } from 'lucide-react';
+import { Plus, X, Target, TrendingUp, ChevronDown, Search, GripVertical } from 'lucide-react';
 import { scoreTrainingPlan } from './planScoring';
 import { exerciseDatabase } from './exerciseDatabase';
 import type { Exercise } from './exerciseDatabase';
@@ -605,10 +605,13 @@ const TrainingPlanBuilder = () => {
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={`grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                                  className={`flex flex-row gap-3 p-3 bg-gray-50 rounded-lg items-center ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
                                 >
-                                  <div className="md:col-span-2">
+                                  {/* Drag handle icon */}
+                                  <div className="flex items-center mr-2 md:mr-0" {...provided.dragHandleProps}>
+                                    <GripVertical className="h-5 w-5 text-gray-400 cursor-grab active:cursor-grabbing" />
+                                  </div>
+                                  <div className="flex flex-col grow">
                                     <ExerciseSelector
                                       value={exercise.name}
                                       onChange={(selectedExercise) => updateExercise(dayIndex, exerciseIndex, 'exercise', selectedExercise)}
