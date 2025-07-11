@@ -3,6 +3,8 @@ import { Plus, X, Target, TrendingUp, ChevronDown, Search } from 'lucide-react';
 import { scoreTrainingPlan } from './planScoring';
 import { exerciseDatabase } from './exerciseDatabase';
 import type { Exercise } from './exerciseDatabase';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 
 interface Day {
   name: string;
@@ -452,6 +454,27 @@ const TrainingPlanBuilder = () => {
 
   const score = scoreTrainingPlan(days, experience, focusAreas);
 
+  // --- DRAG AND DROP HANDLER ---
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+    if (!destination) return;
+    // If dropped in the same place, do nothing
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+    const sourceDayIdx = parseInt(source.droppableId.replace('day-', ''));
+    const destDayIdx = parseInt(destination.droppableId.replace('day-', ''));
+    const newDays = [...days];
+    // Remove from source
+    const [moved] = newDays[sourceDayIdx].exercises.splice(source.index, 1);
+    // Insert into destination
+    newDays[destDayIdx].exercises.splice(destination.index, 0, moved);
+    setDays(newDays);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-4">
@@ -544,70 +567,91 @@ const TrainingPlanBuilder = () => {
             </div>
 
             {/* Training Days */}
-            <div className="space-y-6">
-              {days.map((day, dayIndex) => (
-                <div key={dayIndex} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{day.name}</h3>
-                    {/* Day Summary */}
-                    <div className="p-3 bg-blue-50 rounded-lg">
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div className="space-y-6">
+                {days.map((day, dayIndex) => (
+                  <div key={dayIndex} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">{day.name}</h3>
+                      {/* Day Summary */}
+                      <div className="p-3 bg-blue-50 rounded-lg">
                         <div className="flex flex-wrap gap-4 text-sm">
-                        <span className="text-gray-600">
+                          <span className="text-gray-600">
                             <strong>Exercises:</strong> {day.exercises.length}
-                        </span>
-                        <span className="text-gray-600">
+                          </span>
+                          <span className="text-gray-600">
                             <strong>Sets:</strong> {day.exercises.reduce((total, ex) => total + (ex.sets || 0), 0)}
-                        </span>
-                        <span className="text-gray-600 flex items-center">
+                          </span>
+                          <span className="text-gray-600 flex items-center">
                             <strong>Time:</strong> {day.exercises.reduce((total, ex) => total + (ex.sets || 0), 0) * 3} min
-                        </span>
+                          </span>
                         </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {day.exercises.map((exercise, exerciseIndex) => (
-                      <div key={exerciseIndex} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="md:col-span-2">
-                          <ExerciseSelector
-                            value={exercise.name}
-                            onChange={(selectedExercise) => updateExercise(dayIndex, exerciseIndex, 'exercise', selectedExercise)}
-                          />
-                          <div className="mt-1 text-xs text-gray-500">
-                            Primary: {exercise.primaryMuscle}
-                            {exercise.secondaryMuscle && ` • Secondary: ${exercise.secondaryMuscle}`}
-                          </div>
-                        </div>
-                        
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={exercise.sets}
-                          onChange={(e) => updateExercise(dayIndex, exerciseIndex, 'sets', parseInt(e.target.value) || 0)}
-                          className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Sets"
-                        />
-                        
-                        <button
-                          onClick={() => removeExercise(dayIndex, exerciseIndex)}
-                          className="flex items-center justify-center p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
                       </div>
-                    ))}
-                    <button
-                      onClick={() => addExercise(dayIndex)}
-                      className="flex items-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Exercise
-                    </button>
+                    </div>
+                    <Droppable droppableId={`day-${dayIndex}`}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`space-y-3 ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
+                        >
+                          {day.exercises.map((exercise, exerciseIndex) => (
+                            <Draggable
+                              key={exerciseIndex + '-' + exercise.name}
+                              draggableId={`day-${dayIndex}-exercise-${exerciseIndex}`}
+                              index={exerciseIndex}
+                            >
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                                >
+                                  <div className="md:col-span-2">
+                                    <ExerciseSelector
+                                      value={exercise.name}
+                                      onChange={(selectedExercise) => updateExercise(dayIndex, exerciseIndex, 'exercise', selectedExercise)}
+                                    />
+                                    <div className="mt-1 text-xs text-gray-500">
+                                      Primary: {exercise.primaryMuscle}
+                                      {exercise.secondaryMuscle && ` • Secondary: ${exercise.secondaryMuscle}`}
+                                    </div>
+                                  </div>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="10"
+                                    value={exercise.sets}
+                                    onChange={(e) => updateExercise(dayIndex, exerciseIndex, 'sets', parseInt(e.target.value) || 0)}
+                                    className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Sets"
+                                  />
+                                  <button
+                                    onClick={() => removeExercise(dayIndex, exerciseIndex)}
+                                    className="flex items-center justify-center p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                          <button
+                            onClick={() => addExercise(dayIndex)}
+                            className="flex items-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add Exercise
+                          </button>
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </DragDropContext>
           </div>
 
           {/* Right Panel - Analysis */}
