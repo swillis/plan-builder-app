@@ -5,6 +5,11 @@ import { exerciseDatabase } from './exerciseDatabase';
 import type { Exercise } from './exerciseDatabase';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
+import { db } from "./firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "./firebase"; // Make sure you export auth from firebase.ts
+import { signOut } from "firebase/auth";
 
 interface Day {
   name: string;
@@ -20,6 +25,14 @@ interface FeedbackItem {
   muscle: string;
   message: string;
   type: 'warning' | 'info';
+}
+
+interface TrainingPlanBuilderProps {
+  days?: Day[];
+  experience?: string;
+  focusAreas?: string[];
+  trainingDays?: number;
+  onPlanLoaded?: () => void;
 }
 
 const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
@@ -137,15 +150,28 @@ const PillBar = ({ count, max = 20 }: { count: number; max?: number }) => {
  * @returns { score: number, grade: string, details: string[] }
  */
 
-const TrainingPlanBuilder = () => {
-  const [experience, setExperience] = useState('Intermediate');
-  const [focusAreas, setFocusAreas] = useState(['Back', 'Glutes']);
-  const [trainingDays, setTrainingDays] = useState(3);
-  const [days, setDays] = useState<Day[]>([
-    { name: 'Day 1', exercises: [] },
-    { name: 'Day 2', exercises: [] },
-    { name: 'Day 3', exercises: [] }
-  ]);
+const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded }: TrainingPlanBuilderProps = {}) => {
+  const [user] = useAuthState(auth);
+  const [experience, setExperience] = useState(initialExperience || 'Intermediate');
+  const [focusAreas, setFocusAreas] = useState(initialFocusAreas || ['Back', 'Glutes']);
+  const [trainingDays, setTrainingDays] = useState(initialTrainingDays || 3);
+  const [days, setDays] = useState<Day[]>(
+    initialDays || [
+      { name: 'Day 1', exercises: [] },
+      { name: 'Day 2', exercises: [] },
+      { name: 'Day 3', exercises: [] }
+    ]
+  );
+
+  // Sync state with props if they change
+  useEffect(() => {
+    if (initialDays) setDays(initialDays);
+    if (initialExperience) setExperience(initialExperience);
+    if (initialFocusAreas) setFocusAreas(initialFocusAreas);
+    if (initialTrainingDays) setTrainingDays(initialTrainingDays);
+    if (onPlanLoaded) onPlanLoaded();
+    // eslint-disable-next-line
+  }, [initialDays, initialExperience, initialFocusAreas, initialTrainingDays]);
 
   const muscleGroups = [
     'Chest', 'Back', 'Quads', 'Hamstrings', 'Glutes', 
@@ -454,6 +480,29 @@ const TrainingPlanBuilder = () => {
 
   const score = scoreTrainingPlan(days, experience, focusAreas);
 
+  const savePlan = async () => {
+    if (!user) {
+      alert("You must be signed in to save a plan.");
+      return;
+    }
+    const planName = prompt("Enter a name for your plan:");
+    if (!planName) return;
+    try {
+      await addDoc(collection(db, "plans"), {
+        name: planName,
+        days,
+        experience,
+        focusAreas,
+        trainingDays,
+        createdAt: new Date().toISOString(),
+        userId: user.uid, // <-- This is required for the rules above
+      });
+      alert("Plan saved to Firestore!");
+    } catch (e: any) {
+      alert("Error saving plan: " + e.message);
+    }
+  };
+
   // --- DRAG AND DROP HANDLER ---
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -474,6 +523,9 @@ const TrainingPlanBuilder = () => {
     newDays[destDayIdx].exercises.splice(destination.index, 0, moved);
     setDays(newDays);
   };
+
+  // Calculate total number of exercises across all days
+  const totalExercises = days.reduce((sum, day) => sum + day.exercises.length, 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -555,6 +607,12 @@ const TrainingPlanBuilder = () => {
                   <option value="4-Day Sample Plan">4-Day Sample Plan</option>
                   <option value="5-Day Sample Plan">5-Day Sample Plan</option>
                 </select>
+                <button
+                  onClick={savePlan}
+                  className="w-1/2 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Save Plan
+                </button>
                 <button
                   onClick={() => {
                     setDays(days.map(day => ({ ...day, exercises: [] })));
@@ -664,109 +722,95 @@ const TrainingPlanBuilder = () => {
               Real-Time Analysis
             </h2>
 
-            {/* Training Plan Score */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-3">Training Plan Score</h3>
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-purple-600">{score.score}%</div>
-                  <div className="text-sm text-gray-600">Score</div>
-                </div>
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-gray-900">{score.grade}</div>
-                  <div className="text-sm text-gray-600">Grade</div>
-                </div>
+            {totalExercises < 3 ? (
+              <div className="text-center text-gray-500 text-lg py-16">
+                Select a minimum of 3 exercises to see analysis
               </div>
-              <div className="mt-4 text-sm text-gray-700">
-                <strong>Details:</strong>
-                <ul className="list-disc list-inside mt-2">
-                  {score.details.map((detail, index) => (
-                    <li key={index}>{detail}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            {/* Weekly Summary */}
-            {/* <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-3">Weekly Summary</h3>
-              <div className="flex row gap-4">
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-blue-600">{totalSets}</div>
-                  <div className="text-sm text-gray-600">Total Sets</div>
+            ) : (
+              <>
+                {/* Training Plan Score */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-3">Training Plan Score</h3>
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-center flex flex-col grow">
+                      <div className="text-2xl font-bold text-purple-600">{score.score}%</div>
+                      <div className="text-sm text-gray-600">Score</div>
+                    </div>
+                    <div className="text-center flex flex-col grow">
+                      <div className="text-2xl font-bold text-gray-900">{score.grade}</div>
+                      <div className="text-sm text-gray-600">Grade</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm text-gray-700">
+                    <strong>Details:</strong>
+                    <ul className="list-disc list-inside mt-2">
+                      {score.details.map((detail, index) => (
+                        <li key={index}>{detail}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-purple-600">{totalExercises}</div>
-                  <div className="text-sm text-gray-600">Exercises</div>
-                </div>
-                <div className="text-center flex flex-col grow">
-                  <div className="text-2xl font-bold text-green-600">{totalTime}</div>
-                  <div className="text-sm text-gray-600">Minutes</div>
-                </div>
-              </div>
-              <div className={`mt-4 text-center text-sm px-4 py-3 rounded-md font-medium ${weeklySetRecommendation.color}`}>
-                {weeklySetRecommendation.text}
-              </div>
-            </div> */}
-
-            {/* Volume & Frequency Analysis */}
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Volume & Frequency Analysis</h3>
-              <div className="space-y-3">
-                {muscleGroups.map(muscle => {
-                  const volume = volumeMap[muscle] || 0;
-                  const frequency = frequencyMap[muscle] || 0;
-                  const recommendation = getVolumeRecommendation(volume);
-                  const exercises = muscleExerciseMap[muscle];
-                  
-                  if (volume === 0 && frequency === 0) return null;
-                  
-                  return (
-                    <div key={muscle} className="p-3 border border-gray-200 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium text-gray-900">{muscle}</span>
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600">
-                            {volume} sets • {frequency}x/week
+                
+                {/* Volume & Frequency Analysis */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Volume & Frequency Analysis</h3>
+                  <div className="space-y-3">
+                    {muscleGroups.map(muscle => {
+                      const volume = volumeMap[muscle] || 0;
+                      const frequency = frequencyMap[muscle] || 0;
+                      const recommendation = getVolumeRecommendation(volume);
+                      const exercises = muscleExerciseMap[muscle];
+                      
+                      if (volume === 0 && frequency === 0) return null;
+                      
+                      return (
+                        <div key={muscle} className="p-3 border border-gray-200 rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-gray-900">{muscle}</span>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-600">
+                                {volume} sets • {frequency}x/week
+                              </div>
+                            </div>
+                          </div>
+                          {/* PillBar visualization for sets */}
+                          <PillBar count={Math.min(volume, 20)} max={20} />
+                          {/* List exercises and days for this muscle group */}
+                          {exercises && exercises.length > 0 && (
+                            <div className="text-xs text-gray-500 mb-2">
+                              {exercises.map((ex) => `${ex.name} (${ex.day})`).join(', ')}
+                            </div>
+                          )}
+                          <div className={`text-xs px-4 py-3 rounded-md ${recommendation.color}`}>
+                            {recommendation.text}
                           </div>
                         </div>
-                      </div>
-                      {/* PillBar visualization for sets */}
-                      <PillBar count={Math.min(volume, 20)} max={20} />
-                      {/* List exercises and days for this muscle group */}
-                      {exercises && exercises.length > 0 && (
-                        <div className="text-xs text-gray-500 mb-2">
-                          {exercises.map((ex) => `${ex.name} (${ex.day})`).join(', ')}
-                        </div>
-                      )}
-                      <div className={`text-xs px-4 py-3 rounded-md ${recommendation.color}`}>
-                        {recommendation.text}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Feedback */}
-            {feedback.length > 0 && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Recommendations</h3>
-                <div className="space-y-2">
-                  {feedback.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className={`p-3 rounded-lg text-sm ${
-                        item.type === 'warning' 
-                          ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' 
-                          : 'bg-blue-50 text-blue-800 border border-blue-200'
-                      }`}
-                    >
-                      <strong>{item.muscle}:</strong> {item.message}
-                    </div>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+
+                {/* Feedback */}
+                {feedback.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3">Recommendations</h3>
+                    <div className="space-y-2">
+                      {feedback.map((item, index) => (
+                        <div 
+                          key={index} 
+                          className={`p-3 rounded-lg text-sm ${
+                            item.type === 'warning' 
+                              ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' 
+                              : 'bg-blue-50 text-blue-800 border border-blue-200'
+                          }`}
+                        >
+                          <strong>{item.muscle}:</strong> {item.message}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
