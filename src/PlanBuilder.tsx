@@ -9,9 +9,9 @@ import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "./firebase"; // Make sure you export auth from firebase.ts
-import { signOut } from "firebase/auth";
+import { PanelLeft } from 'lucide-react';
 
-interface Day {
+export interface Day {
   name: string;
   exercises: Exercise[];
 }
@@ -33,6 +33,7 @@ interface TrainingPlanBuilderProps {
   focusAreas?: string[];
   trainingDays?: number;
   onPlanLoaded?: () => void;
+  onOpenSidebar?: () => void;
 }
 
 const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
@@ -150,7 +151,7 @@ const PillBar = ({ count, max = 20 }: { count: number; max?: number }) => {
  * @returns { score: number, grade: string, details: string[] }
  */
 
-const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded }: TrainingPlanBuilderProps = {}) => {
+const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded, onOpenSidebar }: TrainingPlanBuilderProps = {}) => {
   const [user] = useAuthState(auth);
   const [experience, setExperience] = useState(initialExperience || 'Intermediate');
   const [focusAreas, setFocusAreas] = useState(initialFocusAreas || ['Back', 'Glutes']);
@@ -162,6 +163,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       { name: 'Day 3', exercises: [] }
     ]
   );
+  const [planName, setPlanName] = useState<string>("New Plan");
 
   // Sync state with props if they change
   useEffect(() => {
@@ -172,6 +174,17 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
     if (onPlanLoaded) onPlanLoaded();
     // eslint-disable-next-line
   }, [initialDays, initialExperience, initialFocusAreas, initialTrainingDays]);
+
+  // Detect mobile (tailwind md: breakpoint)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const muscleGroups = [
     'Chest', 'Back', 'Quads', 'Hamstrings', 'Glutes', 
@@ -485,11 +498,11 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       alert("You must be signed in to save a plan.");
       return;
     }
-    const planName = prompt("Enter a name for your plan:");
-    if (!planName) return;
+    const inputName = prompt("Enter a name for your plan:", planName === "New Plan" ? "" : planName);
+    if (!inputName) return;
     try {
       await addDoc(collection(db, "plans"), {
-        name: planName,
+        name: inputName,
         days,
         experience,
         focusAreas,
@@ -497,9 +510,14 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
         createdAt: new Date().toISOString(),
         userId: user.uid, // <-- This is required for the rules above
       });
+      setPlanName(inputName);
       alert("Plan saved to Firestore!");
-    } catch (e: any) {
-      alert("Error saving plan: " + e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        alert("Error saving plan: " + e.message);
+      } else {
+        alert("Unknown error saving plan.");
+      }
     }
   };
 
@@ -528,15 +546,36 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
   const totalExercises = days.reduce((sum, day) => sum + day.exercises.length, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          Weekly Training Plan Builder
-        </h1>
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto">
+        {/* Header with Plan Name and Save Button */}
+        <div className="flex items-center justify-between h-20 px-6 border-b border-gray-200">
+          <div className="flex items-center">
+            {/* Sidebar open icon (show if onOpenSidebar is provided and on mobile) */}
+            {onOpenSidebar && isMobile && (
+              <button
+                className="mr-2 p-2 rounded hover:bg-gray-100"
+                onClick={onOpenSidebar}
+                aria-label="Open sidebar"
+              >
+                <PanelLeft className="h-5 w-5" />
+              </button>
+            )}
+            <h1 className="font-medium text-lg text-gray-900">
+              {planName}
+            </h1>
+          </div>
+          <button
+            onClick={savePlan}
+            className="bg-blue-600 text-white py-2 px-3 text-sm rounded-md hover:bg-blue-700 transition-colors font-medium"
+          >
+            Save Plan
+          </button>
+        </div>
         
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2">
           {/* Left Panel - Plan Builder */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white p-6 border-r border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <Target className="mr-2 h-5 w-5" />
               Plan Builder
@@ -607,12 +646,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                   <option value="4-Day Sample Plan">4-Day Sample Plan</option>
                   <option value="5-Day Sample Plan">5-Day Sample Plan</option>
                 </select>
-                <button
-                  onClick={savePlan}
-                  className="w-1/2 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Save Plan
-                </button>
+                {/* Save Plan button moved to header */}
                 <button
                   onClick={() => {
                     setDays(days.map(day => ({ ...day, exercises: [] })));
@@ -716,7 +750,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
           </div>
 
           {/* Right Panel - Analysis */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <TrendingUp className="mr-2 h-5 w-5" />
               Real-Time Analysis

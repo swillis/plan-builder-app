@@ -6,18 +6,163 @@ import TrainingPlanBuilder from "./PlanBuilder";
 import Sidebar from "./Sidebar";
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import type { Day } from "./PlanBuilder";
+import { exerciseDatabase } from "./exerciseDatabase";
+import type { Exercise } from "./exerciseDatabase";
 
-const SIDEBAR_OPEN_WIDTH = 256; // w-64
-const SIDEBAR_COLLAPSED_WIDTH = 64; // w-16
+// Example plans (should match PlanBuilder's samplePlans)
+const samplePlans: Record<string, { name: string; exercises: { name: string; sets: number }[] }[]> = {
+  '3-Day Sample Plan': [
+    {
+      name: 'Day 1',
+      exercises: [
+        { name: 'Barbell Bench Press', sets: 4 },
+        { name: 'Incline Dumbbell Press', sets: 3 },
+        { name: 'Dumbbell Row', sets: 4 },
+        { name: 'Lat Pulldown', sets: 3 },
+        { name: 'Overhead Barbell Press', sets: 3 },
+        { name: 'Barbell Curl', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 2',
+      exercises: [
+        { name: 'Back Squat', sets: 4 },
+        { name: 'Romanian Deadlift', sets: 4 },
+        { name: 'Bulgarian Split Squat', sets: 3 },
+        { name: 'Hip Thrust', sets: 3 },
+        { name: 'Standing Calf Raise', sets: 4 },
+        { name: 'Plank', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 3',
+      exercises: [
+        { name: 'Pull-Up', sets: 4 },
+        { name: 'Dumbbell Bench Press', sets: 3 },
+        { name: 'Dumbbell Shoulder Press', sets: 3 },
+        { name: 'Lateral Raise', sets: 3 },
+        { name: 'Tricep Pushdown', sets: 3 },
+        { name: 'Hammer Curl', sets: 3 },
+        { name: 'Russian Twist', sets: 3 }
+      ]
+    }
+  ],
+  '4-Day Sample Plan': [
+    {
+      name: 'Day 1',
+      exercises: [
+        { name: 'Barbell Bench Press', sets: 4 },
+        { name: 'Incline Dumbbell Press', sets: 3 },
+        { name: 'Barbell Curl', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 2',
+      exercises: [
+        { name: 'Back Squat', sets: 4 },
+        { name: 'Leg Press', sets: 3 },
+        { name: 'Standing Calf Raise', sets: 4 }
+      ]
+    },
+    {
+      name: 'Day 3',
+      exercises: [
+        { name: 'Pull-Up', sets: 4 },
+        { name: 'Dumbbell Row', sets: 3 },
+        { name: 'Lat Pulldown', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 4',
+      exercises: [
+        { name: 'Overhead Barbell Press', sets: 4 },
+        { name: 'Lateral Raise', sets: 3 },
+        { name: 'Plank', sets: 3 }
+      ]
+    }
+  ],
+  '5-Day Sample Plan': [
+    {
+      name: 'Day 1',
+      exercises: [
+        { name: 'Barbell Bench Press', sets: 4 },
+        { name: 'Incline Dumbbell Press', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 2',
+      exercises: [
+        { name: 'Back Squat', sets: 4 },
+        { name: 'Leg Press', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 3',
+      exercises: [
+        { name: 'Pull-Up', sets: 4 },
+        { name: 'Dumbbell Row', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 4',
+      exercises: [
+        { name: 'Overhead Barbell Press', sets: 4 },
+        { name: 'Lateral Raise', sets: 3 }
+      ]
+    },
+    {
+      name: 'Day 5',
+      exercises: [
+        { name: 'Romanian Deadlift', sets: 4 },
+        { name: 'Standing Calf Raise', sets: 3 }
+      ]
+    }
+  ]
+};
+
+const examplePlans = [
+  { key: '3-Day Sample Plan', name: '3-Day Sample Plan' },
+  { key: '4-Day Sample Plan', name: '4-Day Sample Plan' },
+  { key: '5-Day Sample Plan', name: '5-Day Sample Plan' },
+];
+
+// Helper to hydrate exercises from the database
+function getExerciseWithSets(name: string, sets: number): Exercise | null {
+  const base = exerciseDatabase.find(ex => ex.name === name);
+  return base ? { ...base, sets } : null;
+}
 
 const App: React.FC = () => {
   const [user, loading] = useAuthState(auth);
   const [plans, setPlans] = useState<{ id: string; name: string }[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState<{
+    days?: Day[];
+    experience?: string;
+    focusAreas?: string[];
+    trainingDays?: number;
+    id?: string;
+    name?: string;
+  } | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
-  // Sidebar open state will be managed in Sidebar for now
-  const sidebarOpen = true;
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      if (window.innerWidth < 768) {
+        setIsMobile(true);
+        setSidebarOpen(false);
+      } else {
+        setIsMobile(false);
+        setSidebarOpen(true);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch plans for the current user
   const fetchPlans = async () => {
@@ -62,6 +207,39 @@ const App: React.FC = () => {
     setPlanLoading(false);
   };
 
+  // Select an example plan
+  const handleSelectExamplePlan = (key: string) => {
+    const plan = samplePlans[key];
+    if (!plan) return;
+    // Set experience/focusAreas defaults as in PlanBuilder
+    let experience: string | undefined;
+    let focusAreas: string[] | undefined;
+    if (key === '3-Day Sample Plan') {
+      experience = 'Intermediate';
+      focusAreas = ['Back', 'Chest', 'Shoulders'];
+    } else if (key === '4-Day Sample Plan') {
+      experience = 'Intermediate';
+      focusAreas = ['Quads', 'Back', 'Shoulders'];
+    } else if (key === '5-Day Sample Plan') {
+      experience = 'Advanced';
+      focusAreas = ['Chest', 'Back', 'Quads', 'Shoulders'];
+    }
+    // Hydrate each exercise from the database
+    const hydrated = plan.map(day => ({
+      name: day.name,
+      exercises: day.exercises
+        .map(ex => getExerciseWithSets(ex.name, ex.sets))
+        .filter((ex): ex is Exercise => Boolean(ex))
+    }));
+    setSelectedPlan({
+      days: hydrated,
+      experience,
+      focusAreas,
+      trainingDays: hydrated.length,
+      name: key,
+    });
+  };
+
   // Rename plan
   const handleRenamePlan = async (planId: string) => {
     const plan = plans.find(p => p.id === planId);
@@ -93,20 +271,22 @@ const App: React.FC = () => {
   ) : !user ? (
     <Login />
   ) : (
-    <div className="relative min-h-screen bg-gray-50">
+    <div className="flex flex-row h-screen bg-gray-50">
       <Sidebar
         plans={plans}
+        examplePlans={examplePlans}
         loading={plansLoading}
         onNewPlan={handleNewPlan}
         onSelectPlan={handleSelectPlan}
+        onSelectExamplePlan={handleSelectExamplePlan}
         onSignOut={handleSignOut}
         onRenamePlan={handleRenamePlan}
         onDeletePlan={handleDeletePlan}
+        open={sidebarOpen}
+        setOpen={setSidebarOpen}
+        isMobile={isMobile}
       />
-      <div
-        className="transition-all duration-300"
-        style={{ marginLeft: sidebarOpen ? SIDEBAR_OPEN_WIDTH : SIDEBAR_COLLAPSED_WIDTH }}
-      >
+      <div className="flex-1 transition-all duration-300 overflow-auto">
         {planLoading ? (
           <div className="min-h-screen flex items-center justify-center text-xl text-gray-500">Loading plan...</div>
         ) : (
@@ -115,6 +295,7 @@ const App: React.FC = () => {
             experience={selectedPlan?.experience}
             focusAreas={selectedPlan?.focusAreas}
             trainingDays={selectedPlan?.trainingDays}
+            onOpenSidebar={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
           />
         )}
       </div>
