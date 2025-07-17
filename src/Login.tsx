@@ -8,8 +8,12 @@ const Login: React.FC = () => {
     try {
       await signInWithPopup(auth, provider);
       // User is now signed in, will be redirected by parent component
-    } catch (error: any) {
-      alert("Login failed: " + error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert("Login failed: " + error.message);
+      } else {
+        alert("Login failed: Unknown error");
+      }
     }
   };
 

@@ -634,28 +634,6 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                   ))}
                 </div>
               </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
-                <select
-                  defaultValue=""
-                  onChange={handleSamplePlanChange}
-                  className="w-1/2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors font-medium"
-                >
-                  <option value="" disabled>Load Example Plan</option>
-                  <option value="3-Day Sample Plan">3-Day Sample Plan</option>
-                  <option value="4-Day Sample Plan">4-Day Sample Plan</option>
-                  <option value="5-Day Sample Plan">5-Day Sample Plan</option>
-                </select>
-                {/* Save Plan button moved to header */}
-                <button
-                  onClick={() => {
-                    setDays(days.map(day => ({ ...day, exercises: [] })));
-                  }}
-                  className="w-1/2 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors font-medium"
-                >
-                  Reset Plan
-                </button>
-              </div>
             </div>
 
             {/* Training Days */}
