@@ -14,7 +14,9 @@ const Sidebar: React.FC<{
   open: boolean;
   setOpen: (open: boolean) => void;
   isMobile: boolean;
-}> = ({ plans, examplePlans, loading, onNewPlan, onSelectPlan, onSelectExamplePlan, onSignOut, onRenamePlan, onDeletePlan, open, setOpen, isMobile }) => {
+  selectedPlanId?: string;
+  selectedExamplePlanKey?: string;
+}> = ({ plans, examplePlans, loading, onNewPlan, onSelectPlan, onSelectExamplePlan, onSignOut, onRenamePlan, onDeletePlan, open, setOpen, isMobile, selectedPlanId, selectedExamplePlanKey }) => {
   const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
   const [showExamples, setShowExamples] = React.useState(true);
   const [showMyPlans, setShowMyPlans] = React.useState(true);
@@ -70,38 +72,9 @@ const Sidebar: React.FC<{
             <Plus className="h-4 w-4" />
             {open && 'New Plan'}
           </button>
-          {/* Example Plans Section - only show when open */}
-          {open && (
-            <div className="mb-4">
-              <button
-                className="flex items-center w-full px-2 py-2 text-gray-700 font-semibold text-sm hover:bg-gray-100 rounded transition-colors"
-                onClick={() => setShowExamples((v) => !v)}
-              >
-                <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showExamples ? '' : '-rotate-90'}`} />
-                {'Example Plans'}
-              </button>
-              {showExamples && (
-                <div className="pl-6 mt-1 space-y-1">
-                  {examplePlans.length === 0 ? (
-                    <div className="text-gray-400 text-xs px-2 py-1">No example plans</div>
-                  ) : (
-                    examplePlans.map((plan) => (
-                      <button
-                        key={plan.key}
-                        className="w-full text-left px-3 py-2 rounded-md hover:bg-blue-50 text-gray-800 text-sm transition-colors"
-                        onClick={() => onSelectExamplePlan && onSelectExamplePlan(plan.key)}
-                      >
-                        {plan.name}
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          )}
           {/* My Plans Section - only show when open */}
           {open && (
-            <div>
+            <div className="mb-4">
               <button
                 className="flex items-center w-full px-2 py-2 text-gray-700 font-semibold text-sm hover:bg-gray-100 rounded transition-colors"
                 onClick={() => setShowMyPlans((v) => !v)}
@@ -124,7 +97,7 @@ const Sidebar: React.FC<{
                         className="relative group"
                       >
                         <button
-                          className="w-full text-left px-3 py-2 rounded-md hover:bg-blue-50 text-gray-800 text-sm transition-colors pr-8"
+                          className={`w-full text-left px-3 py-2 rounded-md hover:bg-blue-50 text-gray-800 text-sm transition-colors pr-8${selectedPlanId === plan.id ? ' bg-blue-100 font-bold' : ''}`}
                           onClick={() => onSelectPlan && onSelectPlan(plan.id)}
                         >
                           {plan.name}
@@ -165,6 +138,35 @@ const Sidebar: React.FC<{
                           </div>
                         )}
                       </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Example Plans Section - only show when open */}
+          {open && (
+            <div>
+              <button
+                className="flex items-center w-full px-2 py-2 text-gray-700 font-semibold text-sm hover:bg-gray-100 rounded transition-colors"
+                onClick={() => setShowExamples((v) => !v)}
+              >
+                <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showExamples ? '' : '-rotate-90'}`} />
+                {'Example Plans'}
+              </button>
+              {showExamples && (
+                <div className="pl-6 mt-1 space-y-1">
+                  {examplePlans.length === 0 ? (
+                    <div className="text-gray-400 text-xs px-2 py-1">No example plans</div>
+                  ) : (
+                    examplePlans.map((plan) => (
+                      <button
+                        key={plan.key}
+                        className={`w-full text-left px-3 py-2 rounded-md hover:bg-blue-50 text-gray-800 text-sm transition-colors${selectedExamplePlanKey === plan.key ? ' bg-blue-100 font-bold' : ''}`}
+                        onClick={() => onSelectExamplePlan && onSelectExamplePlan(plan.key)}
+                      >
+                        {plan.name}
+                      </button>
                     ))
                   )}
                 </div>

@@ -202,6 +202,7 @@ const App: React.FC = () => {
         focusAreas: data.focusAreas,
         trainingDays: data.trainingDays,
         id: planId,
+        name: data.name,
       });
     }
     setPlanLoading(false);
@@ -285,6 +286,8 @@ const App: React.FC = () => {
         open={sidebarOpen}
         setOpen={setSidebarOpen}
         isMobile={isMobile}
+        selectedPlanId={selectedPlan?.id}
+        selectedExamplePlanKey={selectedPlan && !selectedPlan.id ? selectedPlan.name : undefined}
       />
       <div className="flex-1 transition-all duration-300 overflow-auto">
         {planLoading ? (
@@ -295,6 +298,8 @@ const App: React.FC = () => {
             experience={selectedPlan?.experience}
             focusAreas={selectedPlan?.focusAreas}
             trainingDays={selectedPlan?.trainingDays}
+            planId={selectedPlan?.id}
+            planNameProp={selectedPlan?.name}
             onOpenSidebar={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
           />
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Plus, X, Target, TrendingUp, ChevronDown, Search, GripVertical } from 'lucide-react';
 import { scoreTrainingPlan } from './planScoring';
 import { exerciseDatabase } from './exerciseDatabase';
@@ -6,10 +6,16 @@ import type { Exercise } from './exerciseDatabase';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import { db } from "./firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "./firebase"; // Make sure you export auth from firebase.ts
 import { PanelLeft } from 'lucide-react';
+// Example plan keys for copy button logic
+const EXAMPLE_PLAN_KEYS = [
+  '3-Day Sample Plan',
+  '4-Day Sample Plan',
+  '5-Day Sample Plan',
+];
 
 export interface Day {
   name: string;
@@ -34,6 +40,8 @@ interface TrainingPlanBuilderProps {
   trainingDays?: number;
   onPlanLoaded?: () => void;
   onOpenSidebar?: () => void;
+  planId?: string;
+  planNameProp?: string;
 }
 
 const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
@@ -151,7 +159,7 @@ const PillBar = ({ count, max = 20 }: { count: number; max?: number }) => {
  * @returns { score: number, grade: string, details: string[] }
  */
 
-const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded, onOpenSidebar }: TrainingPlanBuilderProps = {}) => {
+const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded, onOpenSidebar, planId, planNameProp }: TrainingPlanBuilderProps = {}) => {
   const [user] = useAuthState(auth);
   const [experience, setExperience] = useState(initialExperience || 'Intermediate');
   const [focusAreas, setFocusAreas] = useState(initialFocusAreas || ['Back', 'Glutes']);
@@ -163,7 +171,18 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       { name: 'Day 3', exercises: [] }
     ]
   );
-  const [planName, setPlanName] = useState<string>("New Plan");
+  const [planName, setPlanName] = useState<string>(planNameProp || "New Plan");
+
+  const initialPlanRef = useRef({
+    days: initialDays,
+    experience: initialExperience,
+    focusAreas: initialFocusAreas,
+    trainingDays: initialTrainingDays,
+    planName: planNameProp || "New Plan"
+  });
+
+  // Detect if this is an example plan (no planId, planNameProp matches example key)
+  const isExamplePlan = !planId && planNameProp && EXAMPLE_PLAN_KEYS.includes(planNameProp);
 
   // Sync state with props if they change
   useEffect(() => {
@@ -171,9 +190,17 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
     if (initialExperience) setExperience(initialExperience);
     if (initialFocusAreas) setFocusAreas(initialFocusAreas);
     if (initialTrainingDays) setTrainingDays(initialTrainingDays);
+    setPlanName(planNameProp || "New Plan");
+    initialPlanRef.current = {
+      days: initialDays,
+      experience: initialExperience,
+      focusAreas: initialFocusAreas,
+      trainingDays: initialTrainingDays,
+      planName: planNameProp || "New Plan"
+    };
     if (onPlanLoaded) onPlanLoaded();
     // eslint-disable-next-line
-  }, [initialDays, initialExperience, initialFocusAreas, initialTrainingDays]);
+  }, [initialDays, initialExperience, initialFocusAreas, initialTrainingDays, planNameProp]);
 
   // Detect mobile (tailwind md: breakpoint)
   const [isMobile, setIsMobile] = useState(false);
@@ -192,149 +219,6 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
   ];
 
   const experienceLevels = ['Beginner', 'Intermediate', 'Advanced'];
-
-  // Sample plans (now only use name and sets)
-  const samplePlans: Record<string, { name: string; exercises: { name: string; sets: number }[] }[]> = {
-    '3-Day Sample Plan': [
-      {
-        name: 'Day 1',
-        exercises: [
-          { name: 'Barbell Bench Press', sets: 4 },
-          { name: 'Incline Dumbbell Press', sets: 3 },
-          { name: 'Dumbbell Row', sets: 4 },
-          { name: 'Lat Pulldown', sets: 3 },
-          { name: 'Overhead Barbell Press', sets: 3 },
-          { name: 'Barbell Curl', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 2',
-        exercises: [
-          { name: 'Back Squat', sets: 4 },
-          { name: 'Romanian Deadlift', sets: 4 },
-          { name: 'Bulgarian Split Squat', sets: 3 },
-          { name: 'Hip Thrust', sets: 3 },
-          { name: 'Standing Calf Raise', sets: 4 },
-          { name: 'Plank', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 3',
-        exercises: [
-          { name: 'Pull-Up', sets: 4 },
-          { name: 'Dumbbell Bench Press', sets: 3 },
-          { name: 'Dumbbell Shoulder Press', sets: 3 },
-          { name: 'Lateral Raise', sets: 3 },
-          { name: 'Tricep Pushdown', sets: 3 },
-          { name: 'Hammer Curl', sets: 3 },
-          { name: 'Russian Twist', sets: 3 }
-        ]
-      }
-    ],
-    '4-Day Sample Plan': [
-      {
-        name: 'Day 1',
-        exercises: [
-          { name: 'Barbell Bench Press', sets: 4 },
-          { name: 'Incline Dumbbell Press', sets: 3 },
-          { name: 'Barbell Curl', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 2',
-        exercises: [
-          { name: 'Back Squat', sets: 4 },
-          { name: 'Leg Press', sets: 3 },
-          { name: 'Standing Calf Raise', sets: 4 }
-        ]
-      },
-      {
-        name: 'Day 3',
-        exercises: [
-          { name: 'Pull-Up', sets: 4 },
-          { name: 'Dumbbell Row', sets: 3 },
-          { name: 'Lat Pulldown', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 4',
-        exercises: [
-          { name: 'Overhead Barbell Press', sets: 4 },
-          { name: 'Lateral Raise', sets: 3 },
-          { name: 'Plank', sets: 3 }
-        ]
-      }
-    ],
-    '5-Day Sample Plan': [
-      {
-        name: 'Day 1',
-        exercises: [
-          { name: 'Barbell Bench Press', sets: 4 },
-          { name: 'Incline Dumbbell Press', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 2',
-        exercises: [
-          { name: 'Back Squat', sets: 4 },
-          { name: 'Leg Press', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 3',
-        exercises: [
-          { name: 'Pull-Up', sets: 4 },
-          { name: 'Dumbbell Row', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 4',
-        exercises: [
-          { name: 'Overhead Barbell Press', sets: 4 },
-          { name: 'Lateral Raise', sets: 3 }
-        ]
-      },
-      {
-        name: 'Day 5',
-        exercises: [
-          { name: 'Romanian Deadlift', sets: 4 },
-          { name: 'Standing Calf Raise', sets: 3 }
-        ]
-      }
-    ]
-  };
-
-  // Helper to hydrate exercises from the database
-  function getExerciseWithSets(name: string, sets: number): Exercise | null {
-    const base = exerciseDatabase.find(ex => ex.name === name);
-    return base ? { ...base, sets } : null;
-  }
-
-  const handleSamplePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = e.target.value;
-    if (samplePlans[selected]) {
-      setTrainingDays(samplePlans[selected].length);
-      // Hydrate each exercise from the database
-      const hydrated = samplePlans[selected].map(day => ({
-        name: day.name,
-        exercises: day.exercises
-          .map(ex => getExerciseWithSets(ex.name, ex.sets))
-          .filter((ex): ex is Exercise => Boolean(ex))
-      }));
-      setDays(hydrated);
-      // Optionally set experience/focus areas for each plan
-      if (selected === '3-Day Sample Plan') {
-        setExperience('Intermediate');
-        setFocusAreas(['Back', 'Chest', 'Shoulders']);
-      } else if (selected === '4-Day Sample Plan') {
-        setExperience('Intermediate');
-        setFocusAreas(['Quads', 'Back', 'Shoulders']);
-      } else if (selected === '5-Day Sample Plan') {
-        setExperience('Advanced');
-        setFocusAreas(['Chest', 'Back', 'Quads', 'Shoulders']);
-      }
-    }
-  };
 
   // Update days array when training days changes
   useEffect(() => {
@@ -373,9 +257,15 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       newDays[dayIndex].exercises[exerciseIndex].primaryMuscle = value.primaryMuscle;
       newDays[dayIndex].exercises[exerciseIndex].secondaryMuscle = value.secondaryMuscle;
     } else if (field === 'sets' && typeof value === 'number') {
-      newDays[dayIndex].exercises[exerciseIndex].sets = value;
+      // Only allow valid numbers between 1 and 10
+      if (Number.isFinite(value) && value >= 1 && value <= 10) {
+        newDays[dayIndex].exercises[exerciseIndex].sets = value;
+        setDays(newDays);
+      }
+      // If invalid, do not update state
+      return;
     }
-    setDays(newDays);
+    if (field === 'exercise') setDays(newDays);
   };
 
   const handleFocusAreaChange = (muscle: string) => {
@@ -498,25 +388,46 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       alert("You must be signed in to save a plan.");
       return;
     }
-    const inputName = prompt("Enter a name for your plan:", planName === "New Plan" ? "" : planName);
-    if (!inputName) return;
-    try {
-      await addDoc(collection(db, "plans"), {
-        name: inputName,
-        days,
-        experience,
-        focusAreas,
-        trainingDays,
-        createdAt: new Date().toISOString(),
-        userId: user.uid, // <-- This is required for the rules above
-      });
-      setPlanName(inputName);
-      alert("Plan saved to Firestore!");
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        alert("Error saving plan: " + e.message);
-      } else {
-        alert("Unknown error saving plan.");
+    if (planId) {
+      // Update existing plan
+      try {
+        await updateDoc(doc(db, "plans", planId), {
+          name: planName,
+          days,
+          experience,
+          focusAreas,
+          trainingDays,
+        });
+        alert("Plan updated!");
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          alert("Error updating plan: " + e.message);
+        } else {
+          alert("Unknown error updating plan.");
+        }
+      }
+    } else {
+      // Create new plan
+      const inputName = prompt("Enter a name for your plan:", planName === "New Plan" ? "" : planName);
+      if (!inputName) return;
+      try {
+        await addDoc(collection(db, "plans"), {
+          name: inputName,
+          days,
+          experience,
+          focusAreas,
+          trainingDays,
+          createdAt: new Date().toISOString(),
+          userId: user.uid,
+        });
+        setPlanName(inputName);
+        alert("Plan saved to Firestore!");
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          alert("Error saving plan: " + e.message);
+        } else {
+          alert("Unknown error saving plan.");
+        }
       }
     }
   };
@@ -548,7 +459,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto">
-        {/* Header with Plan Name and Save Button */}
+        {/* Header with Plan Name and Save/Copy Button */}
         <div className="flex items-center justify-between h-20 px-6 border-b border-gray-200">
           <div className="flex items-center">
             {/* Sidebar open icon (show if onOpenSidebar is provided and on mobile) */}
@@ -567,9 +478,9 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
           </div>
           <button
             onClick={savePlan}
-            className="bg-blue-600 text-white py-2 px-3 text-sm rounded-md hover:bg-blue-700 transition-colors font-medium"
+            className="bg-blue-600 text-white py-2 px-3 text-sm rounded-md font-medium transition-colors hover:bg-blue-700"
           >
-            Save Plan
+            {isExamplePlan ? 'Copy to My Plans' : 'Save Plan'}
           </button>
         </div>
         
@@ -696,7 +607,12 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                                     min="1"
                                     max="10"
                                     value={exercise.sets}
-                                    onChange={(e) => updateExercise(dayIndex, exerciseIndex, 'sets', parseInt(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value, 10);
+                                      if (!isNaN(val) && val >= 1 && val <= 10) {
+                                        updateExercise(dayIndex, exerciseIndex, 'sets', val);
+                                      }
+                                    }}
                                     className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Sets"
                                   />
