@@ -162,7 +162,7 @@ const PillBar = ({ count, max = 20 }: { count: number; max?: number }) => {
 const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded, onOpenSidebar, planId, planNameProp }: TrainingPlanBuilderProps = {}) => {
   const [user] = useAuthState(auth);
   const [experience, setExperience] = useState(initialExperience || 'Intermediate');
-  const [focusAreas, setFocusAreas] = useState(initialFocusAreas || ['Back', 'Glutes']);
+  const [focusAreas, setFocusAreas] = useState(initialFocusAreas || []);
   const [trainingDays, setTrainingDays] = useState(initialTrainingDays || 3);
   const [days, setDays] = useState<Day[]>(
     initialDays || [
@@ -294,10 +294,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
           volumeMap[exercise.primaryMuscle] += exercise.sets || 0;
           trainedMuscles.add(exercise.primaryMuscle);
         }
-        if (exercise.secondaryMuscle) {
-          volumeMap[exercise.secondaryMuscle] += Math.floor((exercise.sets || 0));
-          trainedMuscles.add(exercise.secondaryMuscle);
-        }
+
       });
 
       trainedMuscles.forEach((muscle: string) => {
@@ -368,13 +365,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
           const canonical = muscleGroups.find(m => m.toLowerCase() === ex.primaryMuscle.toLowerCase())!;
           map[canonical].push({ name: ex.name, day: day.name });
         }
-        if (
-          ex.secondaryMuscle &&
-          muscleGroups.map(m => m.toLowerCase()).includes(ex.secondaryMuscle.toLowerCase())
-        ) {
-          const canonical = muscleGroups.find(m => m.toLowerCase() === ex.secondaryMuscle.toLowerCase())!;
-          map[canonical].push({ name: ex.name, day: day.name });
-        }
+
       });
     });
     return map;
@@ -657,7 +648,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
             ) : (
               <>
                 {/* Training Plan Score */}
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                {/* <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-semibold text-gray-900 mb-3">Training Plan Score</h3>
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-center flex flex-col grow">
@@ -677,7 +668,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                       ))}
                     </ul>
                   </div>
-                </div>
+                </div> */}
                 
                 {/* Volume & Frequency Analysis */}
                 <div className="mb-6">

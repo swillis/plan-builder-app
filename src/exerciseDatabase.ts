@@ -1,689 +1,137 @@
-// Final expanded hypertrophy-focused exercise database
+// Updated exercise database using the comprehensive exercises.json dataset
 export interface Exercise {
-    name: string;
-    primaryMuscle: string;
-    secondaryMuscle: string;
-    category: string;
-    equipment: string;
-    movementType: 'Compound' | 'Isolation';
-    mechanics: 'Push' | 'Pull' | 'Other';
-    sets?: number;
+  name: string;
+  primaryMuscle: string;
+  secondaryMuscle: string;
+  category: string;
+  equipment: string;
+  movementType: 'Compound' | 'Isolation';
+  mechanics: 'Push' | 'Pull' | 'Other';
+  sets?: number;
+  // Additional fields from the comprehensive dataset
+  id?: string;
+  bodyPart?: string;
+  target?: string;
+  secondaryMuscles?: string[];
+  instructions?: string[];
+  description?: string;
+  difficulty?: string;
+}
+
+// Import the comprehensive exercise data
+import exerciseData from './exercises.json';
+
+// Helper function to determine movement type based on exercise characteristics
+function determineMovementType(exercise: any): 'Compound' | 'Isolation' {
+  const compoundKeywords = ['squat', 'deadlift', 'press', 'row', 'pull', 'push', 'clean', 'snatch', 'lunge'];
+  const isolationKeywords = ['curl', 'extension', 'raise', 'crunch', 'twist', 'fly'];
+  
+  const name = exercise.name.toLowerCase();
+  
+  for (const keyword of compoundKeywords) {
+    if (name.includes(keyword)) return 'Compound';
   }
   
-  export const exerciseDatabase: Exercise[] = [
-    {
-      "name": "Ab Wheel Rollout",
-      "primaryMuscle": "Abs",
-      "secondaryMuscle": "Lower Back",
-      "category": "Core",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Abduction Machine",
-      "primaryMuscle": "Glutes",
-      "secondaryMuscle": "Hips",
-      "category": "Legs",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Arnold Press",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Triceps",
-      "category": "Shoulders",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Barbell Back Squat",
-      "primaryMuscle": "Quads",
-      "secondaryMuscle": "Glutes",
-      "category": "Legs",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Barbell Bench Press",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Triceps",
-      "category": "Chest",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Barbell Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Barbell Good Morning",
-      "primaryMuscle": "Hamstrings",
-      "secondaryMuscle": "Glutes",
-      "category": "Hamstrings",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Barbell Overhead Press",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Triceps",
-      "category": "Shoulders",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Barbell Row",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Bench Dips",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Chest",
-      "category": "Arms",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Chest Fly",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
-      "category": "Chest",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Chest Press",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Triceps",
-      "category": "Chest",
-      "equipment": "Cable",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Crunch",
-      "primaryMuscle": "Abs",
-      "secondaryMuscle": "Obliques",
-      "category": "Core",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Cable Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Cable Front Raise",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Upper Chest",
-      "category": "Shoulders",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Kickback",
-      "primaryMuscle": "Glutes",
-      "secondaryMuscle": "Hamstrings",
-      "category": "Legs",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Lateral Raise",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "None",
-      "category": "Shoulders",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Lateral Raise (Behind Back)",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Traps",
-      "category": "Shoulders",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Overhead Tricep Extension",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Shoulders",
-      "category": "Arms",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Rope Overhead Triceps Extension",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "None",
-      "category": "Triceps",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Rope Tricep Extension",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Cable Row",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Cable",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Cable Tricep Pushdown",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Shoulders",
-      "category": "Arms",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Chest Press Machine",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Triceps",
-      "category": "Chest",
-      "equipment": "Machine",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Chest Supported Row",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Close-Grip Bench Press",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Chest",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Concentration Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Dumbbell Bench Press",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Triceps",
-      "category": "Chest",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Dumbbell Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Dumbbell Overhead Tricep Extension",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Shoulders",
-      "category": "Arms",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Dumbbell Romanian Deadlift",
-      "primaryMuscle": "Hamstrings",
-      "secondaryMuscle": "Glutes",
-      "category": "Legs",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Dumbbell Row",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Dumbbell Shoulder Press",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Triceps",
-      "category": "Shoulders",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Dumbbell Skull Crushers",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Shoulders",
-      "category": "Arms",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "EZ Bar Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Biceps",
-      "equipment": "EZ Bar",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "EZ-Bar Skull Crushers",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Shoulders",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Front Raise",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Upper Chest",
-      "category": "Shoulders",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Glute Bridge",
-      "primaryMuscle": "Glutes",
-      "secondaryMuscle": "Hamstrings",
-      "category": "Legs",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Hammer Curl",
-      "primaryMuscle": "Forearms",
-      "secondaryMuscle": "Biceps",
-      "category": "Arms",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Hanging Leg Raise",
-      "primaryMuscle": "Abs",
-      "secondaryMuscle": "Hip Flexors",
-      "category": "Core",
-      "equipment": "Bodyweight",
-      "movementType": "Isolation",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Hip Thrust",
-      "primaryMuscle": "Glutes",
-      "secondaryMuscle": "Hamstrings",
-      "category": "Legs",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Incline Barbell Press",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
-      "category": "Chest",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Incline Dumbbell Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Biceps",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Incline Dumbbell Press",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
-      "category": "Chest",
-      "equipment": "Dumbbell",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Inverted Row",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Lat Pulldown",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Machine",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Lateral Raise",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Traps",
-      "category": "Shoulders",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Leg Curl Machine",
-      "primaryMuscle": "Hamstrings",
-      "secondaryMuscle": "Calves",
-      "category": "Legs",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Leg Press",
-      "primaryMuscle": "Quads",
-      "secondaryMuscle": "Glutes",
-      "category": "Legs",
-      "equipment": "Machine",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Leg Press Calf Raise",
-      "primaryMuscle": "Calves",
-      "secondaryMuscle": "None",
-      "category": "Legs",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Lunge",
-      "primaryMuscle": "Quads",
-      "secondaryMuscle": "Glutes",
-      "category": "Legs",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Machine Chest Fly",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
-      "category": "Chest",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Machine Chest Press",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Triceps",
-      "category": "Chest",
-      "equipment": "Machine",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Machine Crunch",
-      "primaryMuscle": "Abs",
-      "secondaryMuscle": "Obliques",
-      "category": "Core",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Machine Shoulder Press",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Triceps",
-      "category": "Shoulders",
-      "equipment": "Machine",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Pec Deck Machine",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
-      "category": "Chest",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Preacher Curl Machine",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Pull-Up",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Push-Up",
-      "primaryMuscle": "Chest",
-      "secondaryMuscle": "Triceps",
-      "category": "Chest",
-      "equipment": "Bodyweight",
-      "movementType": "Compound",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Reverse Barbell Curl",
-      "primaryMuscle": "Forearms",
-      "secondaryMuscle": "Biceps",
-      "category": "Forearms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Reverse Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Reverse Wrist Curl",
-      "primaryMuscle": "Forearms",
-      "secondaryMuscle": "Biceps",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Romanian Deadlift",
-      "primaryMuscle": "Hamstrings",
-      "secondaryMuscle": "Glutes",
-      "category": "Legs",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Russian Twist",
-      "primaryMuscle": "Obliques",
-      "secondaryMuscle": "Abs",
-      "category": "Core",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Seated Calf Raise",
-      "primaryMuscle": "Calves",
-      "secondaryMuscle": "None",
-      "category": "Calves",
-      "equipment": "Machine",
-      "movementType": "Isolation",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Skull Crushers",
-      "primaryMuscle": "Triceps",
-      "secondaryMuscle": "Shoulders",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Smith Machine Calf Raise",
-      "primaryMuscle": "Calves",
-      "secondaryMuscle": "None",
-      "category": "Legs",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Spider Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Standing Calf Raise",
-      "primaryMuscle": "Calves",
-      "secondaryMuscle": "None",
-      "category": "Legs",
-      "equipment": "Bodyweight",
-      "movementType": "Isolation",
-      "mechanics": "Push"
-    },
-    {
-      "name": "Straight Arm Pulldown",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Lats",
-      "category": "Back",
-      "equipment": "Cable",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "T-Bar Row",
-      "primaryMuscle": "Back",
-      "secondaryMuscle": "Biceps",
-      "category": "Back",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Upright Row",
-      "primaryMuscle": "Shoulders",
-      "secondaryMuscle": "Traps",
-      "category": "Shoulders",
-      "equipment": "Barbell",
-      "movementType": "Compound",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Weighted Decline Sit-Up",
-      "primaryMuscle": "Abs",
-      "secondaryMuscle": "Hip Flexors",
-      "category": "Core",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Other"
-    },
-    {
-      "name": "Wrist Curl",
-      "primaryMuscle": "Forearms",
-      "secondaryMuscle": "Biceps",
-      "category": "Arms",
-      "equipment": "Barbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    },
-    {
-      "name": "Zottman Curl",
-      "primaryMuscle": "Biceps",
-      "secondaryMuscle": "Forearms",
-      "category": "Arms",
-      "equipment": "Dumbbell",
-      "movementType": "Isolation",
-      "mechanics": "Pull"
-    }
-  ];
+  for (const keyword of isolationKeywords) {
+    if (name.includes(keyword)) return 'Isolation';
+  }
+  
+  // Default to compound for most exercises
+  return 'Compound';
+}
+
+// Helper function to determine mechanics based on exercise characteristics
+function determineMechanics(exercise: any): 'Push' | 'Pull' | 'Other' {
+  const pushKeywords = ['press', 'push', 'extension', 'thrust', 'squat', 'lunge'];
+  const pullKeywords = ['row', 'pull', 'curl', 'deadlift', 'pulldown'];
+  
+  const name = exercise.name.toLowerCase();
+  
+  for (const keyword of pushKeywords) {
+    if (name.includes(keyword)) return 'Push';
+  }
+  
+  for (const keyword of pullKeywords) {
+    if (name.includes(keyword)) return 'Pull';
+  }
+  
+  return 'Other';
+}
+
+// Helper function to map body parts to muscle groups
+function mapBodyPartToMuscle(bodyPart: string): string {
+  const muscleMap: { [key: string]: string } = {
+    'waist': 'Abs',
+    'back': 'Back',
+    'chest': 'Chest',
+    'upper arms': 'Arms',
+    'lower arms': 'Forearms',
+    'upper legs': 'Legs',
+    'lower legs': 'Calves',
+    'shoulders': 'Shoulders',
+    'neck': 'Neck',
+    'cardio': 'Cardio'
+  };
+  
+  return muscleMap[bodyPart] || bodyPart;
+}
+
+// Helper function to map target muscles to primary muscle
+function mapTargetToPrimaryMuscle(target: string): string {
+  const muscleMap: { [key: string]: string } = {
+    'abs': 'Abs',
+    'lats': 'Back',
+    'pectorals': 'Chest',
+    'biceps': 'Biceps',
+    'triceps': 'Triceps',
+    'quads': 'Quads',
+    'glutes': 'Glutes',
+    'hamstrings': 'Hamstrings',
+    'calves': 'Calves',
+    'delts': 'Shoulders',
+    'shoulders': 'Shoulders',
+    'traps': 'Back',
+    'forearms': 'Forearms',
+    'obliques': 'Abs',
+    'serratus anterior': 'Chest',
+    'upper back': 'Back',
+    'lower back': 'Back',
+    'hip flexors': 'Quads',
+    'rhomboids': 'Back',
+    'trapezius': 'Back'
+  };
+  
+  return muscleMap[target] || target;
+}
+
+// Convert the comprehensive exercise data to our app's format
+export const exerciseDatabase: Exercise[] = exerciseData.map((exercise: any) => {
+  const primaryMuscle = mapTargetToPrimaryMuscle(exercise.target);
+  const secondaryMuscles = exercise.secondaryMuscles 
+    ? exercise.secondaryMuscles.map(muscle => mapTargetToPrimaryMuscle(muscle)).join(', ')
+    : '';
+  const category = mapBodyPartToMuscle(exercise.bodyPart);
+  const movementType = determineMovementType(exercise);
+  const mechanics = determineMechanics(exercise);
+  
+  return {
+    name: exercise.name,
+    primaryMuscle,
+    secondaryMuscle: secondaryMuscles,
+    category,
+    equipment: exercise.equipment,
+    movementType,
+    mechanics,
+    // Additional fields from comprehensive dataset
+    id: exercise.id,
+    bodyPart: exercise.bodyPart,
+    target: exercise.target,
+    secondaryMuscles: exercise.secondaryMuscles,
+    instructions: exercise.instructions,
+    description: exercise.description,
+    difficulty: exercise.difficulty
+  };
+});
+
+// Export the original comprehensive data for potential future use
+export const comprehensiveExerciseData = exerciseData;
