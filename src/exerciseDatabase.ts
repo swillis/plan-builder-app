@@ -383,7 +383,7 @@ export interface Exercise {
     {
       "name": "Incline Barbell Press",
       "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
+      "secondaryMuscle": "Triceps",
       "category": "Chest",
       "equipment": "Barbell",
       "movementType": "Compound",
@@ -401,7 +401,7 @@ export interface Exercise {
     {
       "name": "Incline Dumbbell Press",
       "primaryMuscle": "Chest",
-      "secondaryMuscle": "Shoulders",
+      "secondaryMuscle": "Triceps",
       "category": "Chest",
       "equipment": "Dumbbell",
       "movementType": "Compound",
@@ -685,5 +685,248 @@ export interface Exercise {
       "equipment": "Dumbbell",
       "movementType": "Isolation",
       "mechanics": "Pull"
+    },
+    {
+      "name": "Seated Leg Extension",
+      "primaryMuscle": "Quads",
+      "secondaryMuscle": "None",
+      "category": "Legs",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Lying Leg Curl",
+      "primaryMuscle": "Hamstrings",
+      "secondaryMuscle": "Calves",
+      "category": "Hamstrings",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Machine Chest Press",
+      "primaryMuscle": "Chest",
+      "secondaryMuscle": "Triceps",
+      "category": "Chest",
+      "equipment": "Machine",
+      "movementType": "Compound",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Machine Shoulder Press",
+      "primaryMuscle": "Shoulders",
+      "secondaryMuscle": "Triceps",
+      "category": "Shoulders",
+      "equipment": "Machine",
+      "movementType": "Compound",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Standing Calf Raise",
+      "primaryMuscle": "Calves",
+      "secondaryMuscle": "None",
+      "category": "Calves",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Seated Calf Raise",
+      "primaryMuscle": "Calves",
+      "secondaryMuscle": "None",
+      "category": "Calves",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Lat Pulldown (Wide Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Cable",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Lat Pulldown (Close Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Cable",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Lat Pulldown (Neutral Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Cable",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Lat Pulldown (Underhand Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Cable",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Pull-Up (Standard Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Bodyweight",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Pull-Up (Neutral Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Bodyweight",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Chin-Up (Underhand Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Bodyweight",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Barbell Bench Press (Close Grip)",
+      "primaryMuscle": "Triceps",
+      "secondaryMuscle": "Chest",
+      "category": "Chest",
+      "equipment": "Barbell",
+      "movementType": "Compound",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Barbell Bench Press (Wide Grip)",
+      "primaryMuscle": "Chest",
+      "secondaryMuscle": "Triceps",
+      "category": "Chest",
+      "equipment": "Barbell",
+      "movementType": "Compound",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Barbell Row (Underhand Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Barbell",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Cable Row (Neutral Grip)",
+      "primaryMuscle": "Back",
+      "secondaryMuscle": "Biceps",
+      "category": "Back",
+      "equipment": "Cable",
+      "movementType": "Compound",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Reverse Pec Deck Fly",
+      "primaryMuscle": "Shoulders",
+      "secondaryMuscle": "Upper Back",
+      "category": "Shoulders",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Cable Rear Delt Fly",
+      "primaryMuscle": "Shoulders",
+      "secondaryMuscle": "Upper Back",
+      "category": "Shoulders",
+      "equipment": "Cable",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Bent Over Dumbbell Rear Delt Fly",
+      "primaryMuscle": "Shoulders",
+      "secondaryMuscle": "Upper Back",
+      "category": "Shoulders",
+      "equipment": "Dumbbell",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Incline Bench Rear Delt Fly",
+      "primaryMuscle": "Shoulders",
+      "secondaryMuscle": "Upper Back",
+      "category": "Shoulders",
+      "equipment": "Dumbbell",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Hip Abduction (Machine)",
+      "primaryMuscle": "Glutes",
+      "secondaryMuscle": "Hips",
+      "category": "Legs",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Push"
+    },
+    {
+      "name": "Hip Adduction (Machine)",
+      "primaryMuscle": "Adductors",
+      "secondaryMuscle": "Hips",
+      "category": "Legs",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Dumbbell Shrug",
+      "primaryMuscle": "Traps",
+      "secondaryMuscle": "Shoulders",
+      "category": "Shoulders",
+      "equipment": "Dumbbell",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Cable Shrug",
+      "primaryMuscle": "Traps",
+      "secondaryMuscle": "Shoulders",
+      "category": "Shoulders",
+      "equipment": "Cable",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Machine Shrug",
+      "primaryMuscle": "Traps",
+      "secondaryMuscle": "Shoulders",
+      "category": "Shoulders",
+      "equipment": "Machine",
+      "movementType": "Isolation",
+      "mechanics": "Pull"
+    },
+    {
+      "name": "Dumbbell Chest Fly",
+      "primaryMuscle": "Chest",
+      "secondaryMuscle": "Shoulders",
+      "category": "Chest",
+      "equipment": "Dumbbell",
+      "movementType": "Isolation",
+      "mechanics": "Push"
     }
   ];

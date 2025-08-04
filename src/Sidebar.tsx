@@ -11,12 +11,13 @@ const Sidebar: React.FC<{
   onSignOut?: () => void;
   onRenamePlan?: (id: string) => void;
   onDeletePlan?: (id: string) => void;
+  onDuplicatePlan?: (id: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
   isMobile: boolean;
   selectedPlanId?: string;
   selectedExamplePlanKey?: string;
-}> = ({ plans, examplePlans, loading, onNewPlan, onSelectPlan, onSelectExamplePlan, onSignOut, onRenamePlan, onDeletePlan, open, setOpen, isMobile, selectedPlanId, selectedExamplePlanKey }) => {
+}> = ({ plans, examplePlans, loading, onNewPlan, onSelectPlan, onSelectExamplePlan, onSignOut, onRenamePlan, onDeletePlan, onDuplicatePlan, open, setOpen, isMobile, selectedPlanId, selectedExamplePlanKey }) => {
   const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
   const [showExamples, setShowExamples] = React.useState(true);
   const [showMyPlans, setShowMyPlans] = React.useState(true);
@@ -125,6 +126,15 @@ const Sidebar: React.FC<{
                               }}
                             >
                               Rename
+                            </button>
+                            <button
+                              className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                              onClick={() => {
+                                setMenuOpenId(null);
+                                if (onDuplicatePlan) onDuplicatePlan(plan.id);
+                              }}
+                            >
+                              Duplicate
                             </button>
                             <button
                               className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"

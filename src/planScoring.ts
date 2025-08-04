@@ -44,10 +44,6 @@ export function scoreTrainingPlan(plan: Day[], experience: string, focusAreas: s
         volumeMap[exercise.primaryMuscle] += exercise.sets || 0;
         trainedMuscles.add(exercise.primaryMuscle);
       }
-      if (exercise.secondaryMuscle) {
-        volumeMap[exercise.secondaryMuscle] += Math.floor(exercise.sets || 0);
-        trainedMuscles.add(exercise.secondaryMuscle);
-      }
     });
     trainedMuscles.forEach((muscle: string) => {
       frequencyMap[muscle] += 1;

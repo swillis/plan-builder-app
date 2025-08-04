@@ -114,7 +114,6 @@ const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
                     <div className="text-sm font-medium text-gray-900">{exercise.name}</div>
                     <div className="text-xs text-gray-500">
                       Primary: {exercise.primaryMuscle}
-                      {exercise.secondaryMuscle && ` • Secondary: ${exercise.secondaryMuscle}`}
                     </div>
                   </div>
                 ))}
@@ -162,7 +161,7 @@ const PillBar = ({ count, max = 20 }: { count: number; max?: number }) => {
 const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience, focusAreas: initialFocusAreas, trainingDays: initialTrainingDays, onPlanLoaded, onOpenSidebar, planId, planNameProp }: TrainingPlanBuilderProps = {}) => {
   const [user] = useAuthState(auth);
   const [experience, setExperience] = useState(initialExperience || 'Intermediate');
-  const [focusAreas, setFocusAreas] = useState(initialFocusAreas || ['Back', 'Glutes']);
+  const [focusAreas, setFocusAreas] = useState(initialFocusAreas || []);
   const [trainingDays, setTrainingDays] = useState(initialTrainingDays || 3);
   const [days, setDays] = useState<Day[]>(
     initialDays || [
@@ -294,10 +293,6 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
           volumeMap[exercise.primaryMuscle] += exercise.sets || 0;
           trainedMuscles.add(exercise.primaryMuscle);
         }
-        if (exercise.secondaryMuscle) {
-          volumeMap[exercise.secondaryMuscle] += Math.floor((exercise.sets || 0));
-          trainedMuscles.add(exercise.secondaryMuscle);
-        }
       });
 
       trainedMuscles.forEach((muscle: string) => {
@@ -368,13 +363,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
           const canonical = muscleGroups.find(m => m.toLowerCase() === ex.primaryMuscle.toLowerCase())!;
           map[canonical].push({ name: ex.name, day: day.name });
         }
-        if (
-          ex.secondaryMuscle &&
-          muscleGroups.map(m => m.toLowerCase()).includes(ex.secondaryMuscle.toLowerCase())
-        ) {
-          const canonical = muscleGroups.find(m => m.toLowerCase() === ex.secondaryMuscle.toLowerCase())!;
-          map[canonical].push({ name: ex.name, day: day.name });
-        }
+
       });
     });
     return map;
@@ -597,10 +586,6 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                                       value={exercise.name}
                                       onChange={(selectedExercise) => updateExercise(dayIndex, exerciseIndex, 'exercise', selectedExercise)}
                                     />
-                                    <div className="mt-1 text-xs text-gray-500">
-                                      Primary: {exercise.primaryMuscle}
-                                      {exercise.secondaryMuscle && ` • Secondary: ${exercise.secondaryMuscle}`}
-                                    </div>
                                   </div>
                                   <input
                                     type="number"
@@ -678,6 +663,27 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                     </ul>
                   </div>
                 </div>
+
+                {/* Feedback */}
+                {feedback.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3">Recommendations</h3>
+                    <div className="space-y-2">
+                      {feedback.map((item, index) => (
+                        <div 
+                          key={index} 
+                          className={`p-3 rounded-lg text-sm ${
+                            item.type === 'warning' 
+                              ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' 
+                              : 'bg-blue-50 text-blue-800 border border-blue-200'
+                          }`}
+                        >
+                          <strong>{item.muscle}:</strong> {item.message}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Volume & Frequency Analysis */}
                 <div className="mb-6">
@@ -717,27 +723,6 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                     })}
                   </div>
                 </div>
-
-                {/* Feedback */}
-                {feedback.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">Recommendations</h3>
-                    <div className="space-y-2">
-                      {feedback.map((item, index) => (
-                        <div 
-                          key={index} 
-                          className={`p-3 rounded-lg text-sm ${
-                            item.type === 'warning' 
-                              ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' 
-                              : 'bg-blue-50 text-blue-800 border border-blue-200'
-                          }`}
-                        >
-                          <strong>{item.muscle}:</strong> {item.message}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>

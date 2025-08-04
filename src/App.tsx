@@ -4,7 +4,7 @@ import { auth, db } from "./firebase";
 import Login from "./Login";
 import TrainingPlanBuilder from "./PlanBuilder";
 import Sidebar from "./Sidebar";
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import type { Day } from "./PlanBuilder";
 import { exerciseDatabase } from "./exerciseDatabase";
@@ -267,6 +267,43 @@ const App: React.FC = () => {
     }
   };
 
+  // Duplicate plan
+  const handleDuplicatePlan = async (planId: string) => {
+    if (!user) return;
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    
+    try {
+      // Get the full plan data
+      const ref = doc(db, "plans", planId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return;
+      
+      const data = snap.data();
+      const newName = `${data.name} (Copy)`;
+      
+      // Create a new plan with the same data but a new name
+      await addDoc(collection(db, "plans"), {
+        name: newName,
+        days: data.days,
+        experience: data.experience,
+        focusAreas: data.focusAreas,
+        trainingDays: data.trainingDays,
+        createdAt: new Date().toISOString(),
+        userId: user.uid,
+      });
+      
+      await fetchPlans();
+      alert(`Plan "${data.name}" duplicated as "${newName}"`);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        alert("Error duplicating plan: " + e.message);
+      } else {
+        alert("Unknown error duplicating plan.");
+      }
+    }
+  };
+
   return loading ? (
     <div className="min-h-screen flex items-center justify-center">Loading...</div>
   ) : !user ? (
@@ -283,6 +320,7 @@ const App: React.FC = () => {
         onSignOut={handleSignOut}
         onRenamePlan={handleRenamePlan}
         onDeletePlan={handleDeletePlan}
+        onDuplicatePlan={handleDuplicatePlan}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
         isMobile={isMobile}
