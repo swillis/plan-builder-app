@@ -113,7 +113,9 @@ const ExerciseSelector = ({ value, onChange }: ExerciseSelectorProps) => {
                   >
                     <div className="text-sm font-medium text-gray-900">{exercise.name}</div>
                     <div className="text-xs text-gray-500">
-                      Primary: {exercise.primaryMuscle}
+                      Primary: {exercise.primaryMuscles && exercise.primaryMuscles.length > 0 
+                        ? exercise.primaryMuscles.join(', ') 
+                        : exercise.primaryMuscle}
                     </div>
                   </div>
                 ))}
@@ -234,6 +236,7 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       name: 'Barbell Bench Press',
       sets: 3,
       primaryMuscle: 'Chest',
+      primaryMuscles: undefined, // Will be set when user selects an exercise
       secondaryMuscle: 'Triceps',
       category: 'Chest',
       equipment: 'Barbell',
@@ -254,7 +257,12 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
     if (field === 'exercise' && typeof value === 'object') {
       newDays[dayIndex].exercises[exerciseIndex].name = value.name;
       newDays[dayIndex].exercises[exerciseIndex].primaryMuscle = value.primaryMuscle;
+      newDays[dayIndex].exercises[exerciseIndex].primaryMuscles = value.primaryMuscles;
       newDays[dayIndex].exercises[exerciseIndex].secondaryMuscle = value.secondaryMuscle;
+      newDays[dayIndex].exercises[exerciseIndex].category = value.category;
+      newDays[dayIndex].exercises[exerciseIndex].equipment = value.equipment;
+      newDays[dayIndex].exercises[exerciseIndex].movementType = value.movementType;
+      newDays[dayIndex].exercises[exerciseIndex].mechanics = value.mechanics;
     } else if (field === 'sets' && typeof value === 'number') {
       // Only allow valid numbers between 1 and 10
       if (Number.isFinite(value) && value >= 1 && value <= 10) {
@@ -275,6 +283,14 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
     );
   };
 
+  // Helper function to get all primary muscles for an exercise
+  const getPrimaryMuscles = (exercise: Exercise): string[] => {
+    if (exercise.primaryMuscles && exercise.primaryMuscles.length > 0) {
+      return exercise.primaryMuscles;
+    }
+    return [exercise.primaryMuscle];
+  };
+
   // Analysis calculations
   const getVolumeAndFrequency = () => {
     const volumeMap: Record<string, number> = {};
@@ -289,10 +305,14 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       const trainedMuscles = new Set<string>();
       
       day.exercises.forEach(exercise => {
-        if (exercise.primaryMuscle) {
-          volumeMap[exercise.primaryMuscle] += exercise.sets || 0;
-          trainedMuscles.add(exercise.primaryMuscle);
-        }
+        const primaryMuscles = getPrimaryMuscles(exercise);
+        
+        primaryMuscles.forEach(muscle => {
+          if (muscleGroups.includes(muscle)) {
+            volumeMap[muscle] += exercise.sets || 0; // Each muscle gets full sets
+            trainedMuscles.add(muscle);
+          }
+        });
       });
 
       trainedMuscles.forEach((muscle: string) => {
@@ -308,15 +328,159 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
   // Removed unused getTotalSets and getTotalExercises
 
   const getVolumeRecommendation = (sets: number) => {
+    if (sets === 0) return { text: 'No volume — consider adding exercises for this muscle group', color: 'text-gray-500 bg-gray-50' };
     if (sets < 5) return { text: 'Low for hypertrophy — may support maintenance', color: 'text-blue-600 bg-blue-50' };
     if (sets < 12) return { text: 'Good for hypertrophy', color: 'text-green-600 bg-green-50' };
     if (sets <= 20) return { text: 'Optimal range for hypertrophy', color: 'text-yellow-600 bg-yellow-50' };
     return { text: 'High — ensure recovery is managed', color: 'text-red-600 bg-red-50' };
   };
 
+  const getGroupedVolumeRecommendations = () => {
+    const recommendations: FeedbackItem[] = [];
+    
+    // Get all missing muscle groups (zero volume)
+    const missingMuscles = muscleGroups.filter(muscle => {
+      const volume = volumeMap[muscle] || 0;
+      return volume === 0;
+    });
+    
+    // Define logical groupings for recommendations
+    const logicalGroups = [
+      {
+        name: 'Upper Body Arms',
+        muscles: ['Biceps', 'Triceps'],
+        description: 'arm muscles'
+      },
+      {
+        name: 'Upper Body Push',
+        muscles: ['Chest', 'Shoulders', 'Triceps'],
+        description: 'push muscles'
+      },
+      {
+        name: 'Upper Body Pull',
+        muscles: ['Back', 'Biceps'],
+        description: 'pull muscles'
+      },
+      {
+        name: 'Lower Body',
+        muscles: ['Quads', 'Hamstrings', 'Glutes', 'Calves'],
+        description: 'leg muscles'
+      },
+      {
+        name: 'Core',
+        muscles: ['Abs'],
+        description: 'core muscles'
+      }
+    ];
+    
+    // Find the best grouping for missing muscles
+    const groupedMissing = new Map<string, string[]>();
+    const usedMuscles = new Set<string>();
+    
+    // First, try to group by logical groups
+    logicalGroups.forEach(group => {
+      const groupMissing = group.muscles.filter(muscle => 
+        missingMuscles.includes(muscle) && !usedMuscles.has(muscle)
+      );
+      
+      if (groupMissing.length >= 2) {
+        // If 2 or more muscles from this group are missing, group them
+        groupedMissing.set(group.name, groupMissing);
+        groupMissing.forEach(muscle => usedMuscles.add(muscle));
+      }
+    });
+    
+    // Handle remaining individual missing muscles
+    missingMuscles.forEach(muscle => {
+      if (!usedMuscles.has(muscle)) {
+        groupedMissing.set(muscle, [muscle]);
+        usedMuscles.add(muscle);
+      }
+    });
+    
+    // Create recommendations for grouped missing muscles
+    groupedMissing.forEach((muscles, groupName) => {
+      if (muscles.length === 1) {
+        // Single muscle
+        recommendations.push({
+          muscle: muscles[0],
+          message: `You're not training ${muscles[0].toLowerCase()}. Consider adding 2-3 exercises with 3-4 sets each.`,
+          type: 'warning'
+        });
+      } else {
+        // Multiple muscles
+        recommendations.push({
+          muscle: groupName,
+          message: `You're not training ${muscles.join(' or ').toLowerCase()}. Consider adding 2-3 exercises for each with 3-4 sets each.`,
+          type: 'warning'
+        });
+      }
+    });
+    
+    // Group low volume recommendations
+    const lowVolumeMuscles = muscleGroups.filter(muscle => {
+      const volume = volumeMap[muscle] || 0;
+      return volume > 0 && volume < 6;
+    });
+    
+    if (lowVolumeMuscles.length > 0) {
+      if (lowVolumeMuscles.length === 1) {
+        const muscle = lowVolumeMuscles[0];
+        const volume = volumeMap[muscle] || 0;
+        recommendations.push({
+          muscle,
+          message: `Low volume (${volume} sets). Consider increasing to 12-20 sets per week for optimal growth.`,
+          type: 'warning'
+        });
+      } else {
+        // Group multiple low volume muscles
+        const muscleList = lowVolumeMuscles.length > 2 
+          ? lowVolumeMuscles.slice(0, -1).join(', ') + ' and ' + lowVolumeMuscles[lowVolumeMuscles.length - 1]
+          : lowVolumeMuscles.join(' and ');
+        recommendations.push({
+          muscle: 'Low Volume',
+          message: `${muscleList} are below 6 sets per week. Consider increasing volume to 12-20 sets for optimal growth.`,
+          type: 'warning'
+        });
+      }
+    }
+    
+    // Group low frequency recommendations
+    const lowFrequencyMuscles = muscleGroups.filter(muscle => {
+      const volume = volumeMap[muscle] || 0;
+      const frequency = frequencyMap[muscle] || 0;
+      return volume > 0 && frequency < 2;
+    });
+    
+    if (lowFrequencyMuscles.length > 0) {
+      if (lowFrequencyMuscles.length === 1) {
+        const muscle = lowFrequencyMuscles[0];
+        const frequency = frequencyMap[muscle] || 0;
+        recommendations.push({
+          muscle,
+          message: `Low frequency (${frequency}x/week). Consider training 2-3 times per week for better results.`,
+          type: 'warning'
+        });
+      } else {
+        // Group multiple low frequency muscles
+        const muscleList = lowFrequencyMuscles.length > 2 
+          ? lowFrequencyMuscles.slice(0, -1).join(', ') + ' and ' + lowFrequencyMuscles[lowFrequencyMuscles.length - 1]
+          : lowFrequencyMuscles.join(' and ');
+        recommendations.push({
+          muscle: 'Low Frequency',
+          message: `${muscleList} are trained less than 2x per week. Consider training 2-3 times per week for better results.`,
+          type: 'warning'
+        });
+      }
+    }
+    
+    return recommendations;
+  };
+
   const getFocusAreaFeedback = () => {
     const feedback: FeedbackItem[] = [];
     
+    // Add focus area feedback
     focusAreas.forEach(muscle => {
       const volume = volumeMap[muscle] || 0;
       const frequency = frequencyMap[muscle] || 0;
@@ -324,12 +488,13 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
       if (volume < 12 || frequency < 2) {
         feedback.push({
           muscle,
-          message: `Consider increasing ${muscle} volume or frequency`,
+          message: `Consider increasing ${muscle} volume (${volume} sets) or frequency (${frequency}x/week)`,
           type: 'warning'
         });
       }
     });
 
+    // Add high volume day feedback
     days.forEach((day) => {
       const dayTotal = day.exercises.reduce((total, ex) => total + (ex.sets || 0), 0);
       if (dayTotal > 20) {
@@ -340,6 +505,10 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
         });
       }
     });
+
+    // Add grouped volume recommendations
+    const volumeRecommendations = getGroupedVolumeRecommendations();
+    feedback.push(...volumeRecommendations);
 
     return feedback;
   };
@@ -355,15 +524,15 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
     muscleGroups.forEach(muscle => { map[muscle] = []; });
     days.forEach(day => {
       day.exercises.forEach(ex => {
-        if (
-          ex.primaryMuscle &&
-          muscleGroups.map(m => m.toLowerCase()).includes(ex.primaryMuscle.toLowerCase())
-        ) {
-          // Find the canonical muscle group name
-          const canonical = muscleGroups.find(m => m.toLowerCase() === ex.primaryMuscle.toLowerCase())!;
-          map[canonical].push({ name: ex.name, day: day.name });
-        }
-
+        const primaryMuscles = getPrimaryMuscles(ex);
+        
+        primaryMuscles.forEach(muscle => {
+          if (muscleGroups.map(m => m.toLowerCase()).includes(muscle.toLowerCase())) {
+            // Find the canonical muscle group name
+            const canonical = muscleGroups.find(m => m.toLowerCase() === muscle.toLowerCase())!;
+            map[canonical].push({ name: ex.name, day: day.name });
+          }
+        });
       });
     });
     return map;
@@ -666,8 +835,8 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
 
                 {/* Feedback */}
                 {feedback.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">Recommendations</h3>
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-gray-900 mb-3">Suggestions:</h3>
                     <div className="space-y-2">
                       {feedback.map((item, index) => (
                         <div 
@@ -695,12 +864,12 @@ const TrainingPlanBuilder = ({ days: initialDays, experience: initialExperience,
                       const recommendation = getVolumeRecommendation(volume);
                       const exercises = muscleExerciseMap[muscle];
                       
-                      if (volume === 0 && frequency === 0) return null;
-                      
                       return (
-                        <div key={muscle} className="p-3 border border-gray-200 rounded-lg">
+                        <div key={muscle} className="p-3 border rounded-lg border-gray-200">
                           <div className="flex justify-between items-start mb-2">
-                            <span className="font-medium text-gray-900">{muscle}</span>
+                            <span className="font-medium text-gray-900">
+                              {muscle}
+                            </span>
                             <div className="text-right">
                               <div className="text-sm text-gray-600">
                                 {volume} sets • {frequency}x/week

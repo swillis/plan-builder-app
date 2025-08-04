@@ -1,7 +1,8 @@
 // Type definitions (copied from PlanBuilder.tsx)
 export interface Exercise {
   name: string;
-  primaryMuscle: string;
+  primaryMuscle: string; // Keep for backward compatibility
+  primaryMuscles?: string[]; // New field for multiple primary muscles
   secondaryMuscle: string;
   category: string;
   sets?: number;
@@ -10,6 +11,17 @@ export interface Exercise {
 export interface Day {
   name: string;
   exercises: Exercise[];
+}
+
+/**
+ * Helper function to get all primary muscles for an exercise
+ * Handles both single primary muscle (backward compatibility) and multiple primary muscles
+ */
+function getPrimaryMuscles(exercise: Exercise): string[] {
+  if (exercise.primaryMuscles && exercise.primaryMuscles.length > 0) {
+    return exercise.primaryMuscles;
+  }
+  return [exercise.primaryMuscle];
 }
 
 /**
@@ -40,10 +52,14 @@ export function scoreTrainingPlan(plan: Day[], experience: string, focusAreas: s
   plan.forEach((day: Day) => {
     const trainedMuscles = new Set<string>();
     day.exercises.forEach((exercise: Exercise) => {
-      if (exercise.primaryMuscle) {
-        volumeMap[exercise.primaryMuscle] += exercise.sets || 0;
-        trainedMuscles.add(exercise.primaryMuscle);
-      }
+      const primaryMuscles = getPrimaryMuscles(exercise);
+      
+      primaryMuscles.forEach((muscle: string) => {
+        if (muscleGroups.includes(muscle)) {
+          volumeMap[muscle] += exercise.sets || 0; // Each muscle gets full sets
+          trainedMuscles.add(muscle);
+        }
+      });
     });
     trainedMuscles.forEach((muscle: string) => {
       frequencyMap[muscle] += 1;

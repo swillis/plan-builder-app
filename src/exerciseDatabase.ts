@@ -1,7 +1,8 @@
 // Final expanded hypertrophy-focused exercise database
 export interface Exercise {
     name: string;
-    primaryMuscle: string;
+    primaryMuscle: string; // Keep for backward compatibility
+    primaryMuscles?: string[]; // New field for multiple primary muscles
     secondaryMuscle: string;
     category: string;
     equipment: string;
@@ -41,7 +42,8 @@ export interface Exercise {
     {
       "name": "Barbell Back Squat",
       "primaryMuscle": "Quads",
-      "secondaryMuscle": "Glutes",
+      "primaryMuscles": ["Quads", "Glutes"],
+      "secondaryMuscle": "Hamstrings",
       "category": "Legs",
       "equipment": "Barbell",
       "movementType": "Compound",
@@ -284,7 +286,8 @@ export interface Exercise {
     {
       "name": "Dumbbell Romanian Deadlift",
       "primaryMuscle": "Hamstrings",
-      "secondaryMuscle": "Glutes",
+      "primaryMuscles": ["Hamstrings", "Glutes"],
+      "secondaryMuscle": "Lower Back",
       "category": "Legs",
       "equipment": "Dumbbell",
       "movementType": "Compound",
@@ -446,7 +449,8 @@ export interface Exercise {
     {
       "name": "Leg Press",
       "primaryMuscle": "Quads",
-      "secondaryMuscle": "Glutes",
+      "primaryMuscles": ["Quads", "Glutes"],
+      "secondaryMuscle": "Hamstrings",
       "category": "Legs",
       "equipment": "Machine",
       "movementType": "Compound",
@@ -464,7 +468,8 @@ export interface Exercise {
     {
       "name": "Lunge",
       "primaryMuscle": "Quads",
-      "secondaryMuscle": "Glutes",
+      "primaryMuscles": ["Quads", "Glutes"],
+      "secondaryMuscle": "Hamstrings",
       "category": "Legs",
       "equipment": "Bodyweight",
       "movementType": "Compound",
@@ -572,7 +577,8 @@ export interface Exercise {
     {
       "name": "Romanian Deadlift",
       "primaryMuscle": "Hamstrings",
-      "secondaryMuscle": "Glutes",
+      "primaryMuscles": ["Hamstrings", "Glutes"],
+      "secondaryMuscle": "Lower Back",
       "category": "Legs",
       "equipment": "Barbell",
       "movementType": "Compound",
